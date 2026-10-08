@@ -1,0 +1,11 @@
+# Secretos: nunca subir la clave de la API
+.env
+
+# Entorno virtual y archivos de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Resultados de tests
+test-results/
+.pytest_cache/

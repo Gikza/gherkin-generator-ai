@@ -1,0 +1,7 @@
+[server]
+# La app solo se puede abrir desde esta compu
+address = "localhost"
+
+[browser]
+# No enviar estadísticas de uso a Streamlit
+gatherUsageStats = false
