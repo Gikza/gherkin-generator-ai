@@ -33,6 +33,28 @@ Respondé SOLO con JSON válido, sin texto adicional y sin ```, con este formato
 """
 
 
+# La gravedad la decide Python, no la IA, para que sea siempre la misma.
+# "alta" = se pide corregir. "baja" = se muestra como sugerencia.
+GRAVEDAD_POR_REGLA = {
+    "R02": "alta",  # supuestos que contradicen el archivo
+    "R06": "alta",  # Antecedentes contradictorios
+    "R11": "alta",  # precondición dentro de un Cuando
+    "R12": "alta",  # criterio sin cobertura
+    "R14": "alta",  # faltan valores límite
+    "R21": "alta",  # el nombre no coincide con lo que se prueba
+    "R22": "alta",  # paso que es solo un parámetro
+    "R23": "alta",  # requisito inventado
+    "R10": "baja",  # estilo declarativo: el revisor a veces se equivoca acá
+}
+
+
+def aplicar_gravedad(problemas):
+    """Reemplaza la gravedad que propuso la IA por la de la tabla fija."""
+    for problema in problemas:
+        problema["gravedad"] = GRAVEDAD_POR_REGLA.get(problema.get("regla"), "baja")
+    return problemas
+
+
 def extraer_json(texto):
     """Toma el primer objeto JSON del texto, aunque venga con texto o ``` alrededor."""
     inicio, fin = texto.find("{"), texto.rfind("}")
@@ -54,4 +76,4 @@ def revisar(historia, feature):
         }],
     )
     texto = "".join(b.text for b in respuesta.content if b.type == "text")
-    return extraer_json(texto).get("problemas", [])
+    return aplicar_gravedad(extraer_json(texto).get("problemas", []))
