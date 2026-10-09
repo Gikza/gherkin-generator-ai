@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unitarios:
+    name: Tests unitarios (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar pytest
+        run: pytest -v
+
+  e2e:
+    name: Tests de interfaz (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Crear entorno virtual e instalar dependencias
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar Playwright
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Ejecutar tests de Playwright
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Guardar reporte si algo falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-playwright
+          path: e2e/playwright-report/
+          retention-days: 7

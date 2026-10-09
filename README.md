@@ -1,5 +1,7 @@
 # Generador de casos Gherkin con IA
 
+[![Tests](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml)
+
 Herramienta que genera escenarios de prueba en **Gherkin (español)** a partir de una historia de usuario, usando la API de Claude. Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado pasa por validaciones automáticas, un revisor IA y un ciclo de corrección antes de entregarse.
 
 > Proyecto de portfolio en desarrollo. Autora: Gikza, QA con más de 5 años de experiencia, en camino a Automation QA con IA.
@@ -52,6 +54,8 @@ La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
 | `simulador.py` | Respuestas fijas de la IA para los tests de interfaz |
 | `e2e/` | Tests end-to-end con Playwright (TypeScript) |
+| `tests/` | Tests unitarios del validador (pytest) |
+| `.github/workflows/` | Integración continua con GitHub Actions |
 | `ejemplos/` | Archivos `.feature` de referencia |
 | `pruebas_validador/` | Archivo roto a propósito para probar el validador |
 
@@ -70,6 +74,18 @@ Validar archivos `.feature` sin la interfaz:
 ```bash
 python validador.py ejemplos
 ```
+
+## Tests unitarios (pytest)
+
+14 tests que prueban cada regla del validador con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
+
+```bash
+pytest -v
+```
+
+## Integración continua
+
+En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwright en la nube. Si algún test de interfaz falla, guarda el reporte de Playwright para revisarlo.
 
 ## Tests de interfaz (Playwright + TypeScript)
 
@@ -92,11 +108,11 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 ## Próximos pasos
 
 - [x] Tests de interfaz con **Playwright**
-- [ ] Tests unitarios del validador con `pytest`
-- [ ] Integración continua con GitHub Actions
+- [x] Tests unitarios del validador con `pytest`
+- [x] Integración continua con GitHub Actions
 - [ ] Responder las preguntas de aclaración desde la misma pantalla
 - [ ] Generación de reportes de bugs (segunda funcionalidad)
 
 ## Stack
 
-Python · Streamlit · API de Claude · gherkin-official · Gherkin/BDD · Playwright · TypeScript
+Python · Streamlit · API de Claude · gherkin-official · Gherkin/BDD · Playwright · TypeScript · pytest · GitHub Actions

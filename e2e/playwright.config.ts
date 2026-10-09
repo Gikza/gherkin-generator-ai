@@ -16,9 +16,15 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
 
-  // Usa el Google Chrome instalado en la compu. En algunas compus con Windows,
+  // En la compu usa el Google Chrome instalado: en algunas compus con Windows,
   // el navegador que descarga Playwright queda bloqueado (error "spawn UNKNOWN").
-  projects: [{ name: 'chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }],
+  // En GitHub Actions (CI) usa el Chromium de Playwright.
+  projects: [
+    {
+      name: 'chrome',
+      use: { ...devices['Desktop Chrome'], channel: process.env.CI ? undefined : 'chrome' },
+    },
+  ],
 
   // Playwright levanta la app en modo prueba antes de los tests y la cierra al final.
   webServer: {
