@@ -50,6 +50,8 @@ La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para
 | `prompt.py` | Instrucciones del generador (checklist como *system prompt*) |
 | `revisor.py` | Revisor IA y tabla de gravedad |
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
+| `simulador.py` | Respuestas fijas de la IA para los tests de interfaz |
+| `e2e/` | Tests end-to-end con Playwright (TypeScript) |
 | `ejemplos/` | Archivos `.feature` de referencia |
 | `pruebas_validador/` | Archivo roto a propósito para probar el validador |
 
@@ -69,9 +71,27 @@ Validar archivos `.feature` sin la interfaz:
 python validador.py ejemplos
 ```
 
+## Tests de interfaz (Playwright + TypeScript)
+
+6 tests end-to-end que cubren la validación de la entrada, las respuestas de la IA, la descarga del `.feature` y el manejo de errores.
+
+```bash
+cd e2e
+npm install
+npx playwright test
+```
+
+Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (`MODO_PRUEBA=1`) y un simulador devuelve respuestas fijas. Así los tests son gratis, rápidos y predecibles, y pueden provocar errores a propósito, como una IA que tarda demasiado. La calidad de lo que genera la IA se controla por separado, con el validador y el revisor.
+
+| Grupo | Qué se prueba |
+|---|---|
+| Validación de la entrada | Historia vacía y solo con espacios |
+| Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga |
+| Manejo de errores | Mensaje claro si la IA tarda demasiado |
+
 ## Próximos pasos
 
-- [ ] Tests de interfaz con **Playwright**
+- [x] Tests de interfaz con **Playwright**
 - [ ] Tests unitarios del validador con `pytest`
 - [ ] Integración continua con GitHub Actions
 - [ ] Responder las preguntas de aclaración desde la misma pantalla
@@ -79,4 +99,4 @@ python validador.py ejemplos
 
 ## Stack
 
-Python · Streamlit · API de Claude · gherkin-official · Gherkin/BDD
+Python · Streamlit · API de Claude · gherkin-official · Gherkin/BDD · Playwright · TypeScript

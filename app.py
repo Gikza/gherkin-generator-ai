@@ -1,9 +1,16 @@
 """Generador de casos Gherkin: interfaz web con Streamlit."""
+import os
+
 import anthropic
 import streamlit as st
 
-from generador import generar_con_revision
 from validador import validar_texto
+
+# En modo prueba (tests de Playwright) se usa el simulador en lugar de la IA real.
+if os.environ.get("MODO_PRUEBA") == "1":
+    from simulador import generar_con_revision
+else:
+    from generador import generar_con_revision
 
 st.title("Generador de casos Gherkin")
 st.write("Pegá una historia de usuario y obtené escenarios en Gherkin.")
@@ -19,7 +26,7 @@ if st.button("Generar"):
             with st.status("Trabajando...", expanded=True) as estado:
                 st.session_state["resultado"] = generar_con_revision(historia, avisar=st.write)
                 estado.update(label="Listo", state="complete", expanded=False)
-        except anthropic.APITimeoutError:
+        except (anthropic.APITimeoutError, TimeoutError):
             st.error("La IA tardó demasiado en responder. Probá de nuevo en un momento.")
         except anthropic.AuthenticationError:
             st.error("La clave de la API no es válida. Revisá el archivo .env.")

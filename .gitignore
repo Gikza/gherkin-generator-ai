@@ -9,3 +9,5 @@ __pycache__/
 # Resultados de tests
 test-results/
 .pytest_cache/
+node_modules/
+playwright-report/
