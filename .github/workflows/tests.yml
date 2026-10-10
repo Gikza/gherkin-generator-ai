@@ -8,13 +8,14 @@ on:
 jobs:
   unitarios:
     name: Tests unitarios (pytest)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Instalar dependencias
         run: pip install -r requirements.txt
@@ -24,28 +25,48 @@ jobs:
 
   e2e:
     name: Tests de interfaz (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
 
       - name: Crear entorno virtual e instalar dependencias
         run: |
           python -m venv .venv
           .venv/bin/pip install -r requirements.txt
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
 
-      - name: Instalar Playwright
+      - name: Instalar dependencias de Node
         working-directory: e2e
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npm ci
+
+      # Guarda el navegador descargado entre ejecuciones.
+      # La clave cambia solo si cambia la versión de Playwright (package-lock.json).
+      - name: Cache del navegador de Playwright
+        id: cache-navegador
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+
+      - name: Instalar navegador (sin cache)
+        if: steps.cache-navegador.outputs.cache-hit != 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Instalar solo dependencias del sistema (con cache)
+        if: steps.cache-navegador.outputs.cache-hit == 'true'
+        working-directory: e2e
+        run: npx playwright install-deps chromium
 
       - name: Ejecutar tests de Playwright
         working-directory: e2e
@@ -53,7 +74,7 @@ jobs:
 
       - name: Guardar reporte si algo falla
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reporte-playwright
           path: e2e/playwright-report/
