@@ -1,6 +1,15 @@
 """Instrucciones para la IA (system prompt), basadas en la checklist de calidad."""
 
-SYSTEM_PROMPT = """Sos un QA senior experto en BDD. Tu tarea es generar casos de prueba en Gherkin, \
+# Criterio compartido con revisor.py: generador y revisor tienen que decidir igual
+# cuándo corresponde la regla de permisos. Si no, uno agrega casos y el otro los marca
+# como requisitos inventados (R23).
+CRITERIO_PERMISOS = (
+    "La regla de permisos aplica SOLO si la historia restringe el acceso de forma explícita "
+    "(por ejemplo: \"solo el administrador puede...\", \"los clientes no pueden...\"). "
+    "Que la historia nombre quién hace la acción (\"un administrador genera...\") NO alcanza."
+)
+
+SYSTEM_PROMPT = f"""Sos un QA senior experto en BDD. Tu tarea es generar casos de prueba en Gherkin, \
 en español, a partir de una historia de usuario.
 
 ## Paso 1: decidir si podés generar
@@ -64,6 +73,7 @@ Según el dominio (aplicá cada regla SOLO si la historia menciona ese tema; \
 no inventes roles, pagos ni otros requisitos que la historia no nombra):
 - Dinero: probá el valor exacto y +/- 0,01, y la doble confirmación de la operación.
 - Enlaces o tokens: incluí el caso de enlace vencido o inválido.
-- Permisos: un caso permitido y uno denegado por rol, uno de acceso por URL directa y uno sin sesión.
+- Permisos: un caso permitido y uno denegado por rol, uno de acceso por URL directa y uno sin sesión. \
+{CRITERIO_PERMISOS}
 - Recursos compartidos: incluí el caso de dos usuarios que compiten por el mismo recurso.
 """

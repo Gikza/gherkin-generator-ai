@@ -10,13 +10,16 @@ Herramienta que genera escenarios de prueba en **Gherkin (español)** a partir d
 
 - Pegás una historia de usuario y obtenés un archivo `.feature` listo para Cucumber, con camino feliz, casos negativos y casos borde.
 - Si la historia es ambigua (por ejemplo, "la búsqueda debe ser rápida"), **pregunta en lugar de inventar requisitos**.
+- Las preguntas se **responden en la misma pantalla**: la herramienta agrega las respuestas a la historia y vuelve a generar. Las preguntas que quedan sin responder se toman como supuestos y se anotan en el archivo.
 - Muestra los supuestos que tomó, la tabla de cobertura por criterio y los problemas que quedaron sin resolver.
 
 ## Cómo funciona
 
 ```
-Historia ─► ¿Faltan datos? ──sí──► Preguntas de aclaración
-                 │ no
+Historia ─► ¿Faltan datos? ──sí──► Preguntas ──► Respuestas en pantalla
+   ▲             │ no                                     │
+   └─────────────┼──────── historia + aclaraciones ◄──────┘
+                 │
                  ▼
              Generar (IA) ─► Validar (Python) + Revisar (IA)
                  ▲                      │
@@ -41,6 +44,7 @@ La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para
 - **Validación en verde no es calidad.** La primera salida real pasó las 4 validaciones de forma y tenía 4 errores de contenido, entre ellos una tabla de cobertura que citaba un escenario que no existía.
 - **Ajustar el prompt funcionó y lo medí.** Después del ajuste, en 3 ejecuciones con la misma historia, los 4 tipos de error no volvieron a aparecer.
 - **La salida no es determinística.** La misma historia generó 6, 10 y 10 escenarios, con cobertura distinta. Por eso los controles verifican *propiedades* (cobertura, límites, etiquetas) y no comparan contra un texto fijo.
+- **Dos IA pueden no compartir el mismo criterio.** Al responder que el cupón lo genera "un administrador", el generador agregó casos de permisos (rol denegado, acceso por URL directa, sin sesión) y el revisor los marcó como requisitos inventados. La solución fue definir el criterio una sola vez (`CRITERIO_PERMISOS`) y usarlo en los dos prompts, con un test que lo verifica.
 - **El revisor también se equivoca.** Clasificó el mismo problema con gravedades distintas entre intentos y marcó un posible falso positivo. Ningún componente es confiable por separado: la combinación de capas y la revisión humana final es lo que da calidad.
 
 ## Estructura
@@ -48,13 +52,14 @@ La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para
 | Archivo | Función |
 |---|---|
 | `app.py` | Interfaz web (Streamlit) |
+| `aclaraciones.py` | Une la historia con las respuestas a las preguntas (sin IA) |
 | `generador.py` | Generación, ciclo de revisión y corrección |
 | `prompt.py` | Instrucciones del generador (checklist como *system prompt*) |
 | `revisor.py` | Revisor IA y tabla de gravedad |
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
 | `simulador.py` | Respuestas fijas de la IA para los tests de interfaz |
 | `e2e/` | Tests end-to-end con Playwright (TypeScript) |
-| `tests/` | Tests unitarios del validador (pytest) |
+| `tests/` | Tests unitarios (pytest) |
 | `.github/workflows/` | Integración continua con GitHub Actions |
 | `ejemplos/` | Archivos `.feature` de referencia |
 | `pruebas_validador/` | Archivo roto a propósito para probar el validador |
@@ -77,7 +82,11 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-14 tests que prueban cada regla del validador con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
+23 tests:
+
+- **Validador (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
+- **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
+- **Prompts (2):** generador y revisor comparten el mismo criterio de permisos.
 
 ```bash
 pytest -v
@@ -89,7 +98,7 @@ En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwrig
 
 ## Tests de interfaz (Playwright + TypeScript)
 
-6 tests end-to-end que cubren la validación de la entrada, las respuestas de la IA, la descarga del `.feature` y el manejo de errores.
+8 tests end-to-end que cubren la validación de la entrada, las respuestas de la IA, las respuestas a las preguntas de aclaración, la descarga del `.feature` y el manejo de errores.
 
 ```bash
 cd e2e
@@ -103,6 +112,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 |---|---|
 | Validación de la entrada | Historia vacía y solo con espacios |
 | Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga |
+| Respuestas a las preguntas | Generar después de responder; exigir al menos una respuesta |
 | Manejo de errores | Mensaje claro si la IA tarda demasiado |
 
 ## Próximos pasos
@@ -110,7 +120,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 - [x] Tests de interfaz con **Playwright**
 - [x] Tests unitarios del validador con `pytest`
 - [x] Integración continua con GitHub Actions
-- [ ] Responder las preguntas de aclaración desde la misma pantalla
+- [x] Responder las preguntas de aclaración desde la misma pantalla
 - [ ] Generación de reportes de bugs (segunda funcionalidad)
 
 ## Stack

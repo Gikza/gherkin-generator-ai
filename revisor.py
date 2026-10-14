@@ -5,9 +5,11 @@ import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+from prompt import CRITERIO_PERMISOS
+
 load_dotenv()
 
-REVISOR_PROMPT = """Sos un QA senior que revisa archivos .feature generados por otra IA. \
+REVISOR_PROMPT = f"""Sos un QA senior que revisa archivos .feature generados por otra IA. \
 Recibís la historia de usuario y el .feature. Tu tarea es encontrar errores de CONTENIDO \
 según estas reglas:
 
@@ -21,6 +23,10 @@ según estas reglas:
 - R22: ningún paso es solo un parámetro (por ejemplo, "Entonces <resultado>").
 - R23: no hay requisitos inventados (roles, pagos, etc.) que la historia no menciona.
 
+Permisos: {CRITERIO_PERMISOS} Si la historia restringe el acceso, los escenarios de rol \
+denegado, acceso por URL directa y usuario sin sesión son obligatorios: NO los marques como \
+R23 ni como R10. Si la historia no restringe el acceso, esos escenarios SÍ son R23.
+
 Reportá solo violaciones claras. Si dudás, no lo reportes. Si no hay problemas, \
 devolvé una lista vacía.
 
@@ -29,7 +35,7 @@ Gravedad:
 - "baja": estilo o mejora menor.
 
 Respondé SOLO con JSON válido, sin texto adicional y sin ```, con este formato:
-{"problemas": [{"regla": "R11", "gravedad": "alta", "detalle": "Línea 34: ..."}]}
+{{"problemas": [{{"regla": "R11", "gravedad": "alta", "detalle": "Línea 34: ..."}}]}}
 """
 
 
