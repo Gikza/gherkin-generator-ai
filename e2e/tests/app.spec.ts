@@ -60,6 +60,32 @@ test.describe('Respuesta de la IA', () => {
   });
 });
 
+test.describe('Respuestas a las preguntas de aclaración', () => {
+  const ambigua = 'Como usuario quiero buscar productos. La búsqueda debe ser rápida.';
+
+  test('genera escenarios después de responder las preguntas', async ({ page }) => {
+    await generar(page, ambigua);
+
+    const respuesta = page.getByLabel('Pregunta 1: ¿Cuál es el tiempo máximo de respuesta?');
+    await respuesta.fill('2 segundos');
+    await respuesta.press('Enter');
+    await page.getByRole('button', { name: 'Generar con respuestas' }).click();
+
+    await expect(page.getByText('Sin problemas graves.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Escenarios' })).toBeVisible();
+    await expect(page.getByText('Historia usada (con tus respuestas)')).toBeVisible();
+  });
+
+  test('pide al menos una respuesta antes de generar', async ({ page }) => {
+    await generar(page, ambigua);
+
+    await page.getByRole('button', { name: 'Generar con respuestas' }).click();
+
+    await expect(page.getByText('Respondé al menos una pregunta antes de generar.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Escenarios' })).toHaveCount(0);
+  });
+});
+
 test.describe('Manejo de errores', () => {
   test('muestra un mensaje claro si la IA tarda demasiado', async ({ page }) => {
     await generar(page, 'ERROR_TIMEOUT');

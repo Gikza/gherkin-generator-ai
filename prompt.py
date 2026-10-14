@@ -10,6 +10,10 @@ bien, amigable, adecuado) o le falta el actor o la acción principal, NO generes
 Respondé con preguntas de aclaración en el FORMATO A.
 - En cualquier otro caso, generá el .feature en el FORMATO B y escribí como comentarios \
 los supuestos que tomaste.
+- Si la historia trae una sección "Aclaraciones:", tomá esas respuestas como parte de la \
+historia. No repitas preguntas ya respondidas. Si una pregunta dice "(sin respuesta)", no la \
+vuelvas a hacer: tomá un supuesto razonable y anotalo como "# Supuesto:". Volvé al FORMATO A \
+solo si las respuestas abren una duda nueva que impide generar.
 
 ## FORMATO A (faltan datos)
 La primera línea es exactamente: PREGUNTAS

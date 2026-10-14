@@ -4,6 +4,7 @@ Se activa con la variable de entorno MODO_PRUEBA=1. Devuelve siempre la misma
 respuesta según palabras clave de la historia, para que los tests sean
 predecibles, gratis y puedan provocar errores a propósito.
 
+  - Historia con "Aclaraciones:"  -> un .feature válido (ya se respondieron las preguntas)
   - Historia con "rápida"        -> preguntas de aclaración
   - Historia con "ERROR_TIMEOUT" -> la IA tarda demasiado
   - Cualquier otra historia      -> un .feature válido
@@ -36,7 +37,8 @@ def generar_con_revision(historia, avisar=lambda mensaje: None):
     if "ERROR_TIMEOUT" in historia:
         raise TimeoutError("Simulación: la IA tardó demasiado")
 
-    if "rápida" in historia.lower():
+    # Si ya trae respuestas, no vuelve a preguntar: pasa directo a generar.
+    if "rápida" in historia.lower() and "Aclaraciones:" not in historia:
         return {
             "tipo": "preguntas",
             "contenido": "1. ¿Cuál es el tiempo máximo de respuesta?\n2. ¿Por qué campos se busca?",

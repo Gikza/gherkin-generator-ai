@@ -4,6 +4,7 @@ import os
 import anthropic
 import streamlit as st
 
+from aclaraciones import armar_historia, hay_respuestas, separar_preguntas
 from validador import validar_texto
 
 # En modo prueba (tests de Playwright) se usa el simulador en lugar de la IA real.
@@ -17,30 +18,63 @@ st.write("Pegá una historia de usuario y obtené escenarios en Gherkin.")
 
 historia = st.text_area("Historia de usuario", height=200)
 
-if st.button("Generar"):
+
+def ejecutar(texto):
+    """Genera a partir del texto y guarda el resultado en la sesión. Devuelve True si salió bien."""
     st.session_state.pop("resultado", None)
+    try:
+        with st.status("Trabajando...", expanded=True) as estado:
+            st.session_state["resultado"] = generar_con_revision(texto, avisar=st.write)
+            st.session_state["historia_usada"] = texto
+            # Cada ronda de preguntas usa claves nuevas para que los cuadros arranquen vacíos.
+            st.session_state["ronda"] = st.session_state.get("ronda", 0) + 1
+            estado.update(label="Listo", state="complete", expanded=False)
+        return True
+    except (anthropic.APITimeoutError, TimeoutError):
+        st.error("La IA tardó demasiado en responder. Probá de nuevo en un momento.")
+    except anthropic.AuthenticationError:
+        st.error("La clave de la API no es válida. Revisá el archivo .env.")
+    except anthropic.APIError as error:
+        st.error(f"No se pudo generar. Error de la API: {error}")
+    except KeyError:
+        st.error("Falta CLAUDE_MODEL en el archivo .env.")
+    return False
+
+
+if st.button("Generar"):
     if not historia.strip():
+        st.session_state.pop("resultado", None)
         st.error("Pegá una historia de usuario antes de generar.")
     else:
-        try:
-            with st.status("Trabajando...", expanded=True) as estado:
-                st.session_state["resultado"] = generar_con_revision(historia, avisar=st.write)
-                estado.update(label="Listo", state="complete", expanded=False)
-        except (anthropic.APITimeoutError, TimeoutError):
-            st.error("La IA tardó demasiado en responder. Probá de nuevo en un momento.")
-        except anthropic.AuthenticationError:
-            st.error("La clave de la API no es válida. Revisá el archivo .env.")
-        except anthropic.APIError as error:
-            st.error(f"No se pudo generar. Error de la API: {error}")
-        except KeyError:
-            st.error("Falta CLAUDE_MODEL en el archivo .env.")
+        ejecutar(historia)
 
 # El resultado se guarda en la sesión para que no desaparezca al descargar.
 resultado = st.session_state.get("resultado")
 
 if resultado and resultado["tipo"] == "preguntas":
     st.warning("La historia necesita aclaraciones antes de generar escenarios:")
-    st.markdown(resultado["contenido"])
+    preguntas = separar_preguntas(resultado["contenido"])
+    ronda = st.session_state.get("ronda", 0)
+
+    if preguntas:
+        st.write("Respondé las que sepas. Las que dejes vacías se toman como supuestos.")
+        respuestas = [
+            st.text_input(f"Pregunta {numero}: {pregunta}", key=f"respuesta_{ronda}_{numero}")
+            for numero, pregunta in enumerate(preguntas, start=1)
+        ]
+    else:
+        # Si las preguntas no vienen numeradas, se muestran tal cual con un solo cuadro.
+        st.markdown(resultado["contenido"])
+        preguntas = [resultado["contenido"]]
+        respuestas = [st.text_area("Tus respuestas", key=f"respuesta_{ronda}_todas")]
+
+    if st.button("Generar con respuestas"):
+        if not hay_respuestas(respuestas):
+            st.error("Respondé al menos una pregunta antes de generar.")
+        else:
+            texto = armar_historia(st.session_state["historia_usada"], preguntas, respuestas)
+            if ejecutar(texto):
+                st.rerun()  # vuelve a dibujar la pantalla con el nuevo resultado
 
 if resultado and resultado["tipo"] == "feature":
     feature = resultado["contenido"]
@@ -69,6 +103,10 @@ if resultado and resultado["tipo"] == "feature":
             st.error(f"{regla}: " + " | ".join(errores))
         else:
             st.success(f"{regla}: OK")
+
+    if "Aclaraciones:" in st.session_state.get("historia_usada", ""):
+        with st.expander("Historia usada (con tus respuestas)"):
+            st.text(st.session_state["historia_usada"])
 
     st.subheader("Escenarios")
     st.code(feature, language="gherkin", wrap_lines=True)
