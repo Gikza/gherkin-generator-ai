@@ -51,3 +51,50 @@ def generar_con_revision(historia, avisar=lambda mensaje: None):
         "revisor_ok": True,
         "historial": [{"intento": 1, "problemas": []}],
     }
+
+
+# --- Reportes de bugs ------------------------------------------------------
+#   - Descripción con "no anda"        -> preguntas de aclaración
+#   - Descripción con "ERROR_TIMEOUT"  -> la IA tarda demasiado
+#   - Cualquier otra descripción       -> un reporte válido
+
+REPORTE_SIMULADO = """**Título:** [Login] Iniciar sesión con credenciales válidas – muestra error 500
+**Entorno:** [Completar: ambiente, navegador y versión, sistema operativo]
+**Precondiciones:** El usuario de prueba está registrado.
+**Pasos para reproducir:**
+1. Ingresar a la pantalla de inicio de sesión.
+2. Completar usuario y contraseña válidos.
+3. Confirmar el inicio de sesión.
+**Resultado esperado:** El usuario accede a su cuenta.
+**Resultado actual:** Se muestra el mensaje "Error 500: Internal Server Error" y el usuario no accede.
+**Severidad:** Crítica – bloquea el inicio de sesión y no hay alternativa.
+**Frecuencia:** Siempre
+**Evidencia:** [Completar: captura del error]
+**Casos de regresión:**
+Escenario: Inicio de sesión exitoso con credenciales válidas
+  Dado que el usuario está registrado
+  Cuando inicia sesión con credenciales válidas
+  Entonces accede a su cuenta
+"""
+
+
+def generar_reporte_con_revision(entrada, avisar=lambda mensaje: None):
+    """Misma firma que reporte.generar_reporte_con_revision, pero sin llamar a la API."""
+    avisar("Modo prueba: respuesta simulada")
+
+    if "ERROR_TIMEOUT" in entrada:
+        raise TimeoutError("Simulación: la IA tardó demasiado")
+
+    if "no anda" in entrada.lower() and "Aclaraciones:" not in entrada:
+        return {
+            "tipo": "preguntas",
+            "contenido": "1. ¿Qué pasa exactamente cuando falla?\n2. ¿Qué debería pasar?",
+        }
+
+    return {
+        "tipo": "reporte",
+        "contenido": REPORTE_SIMULADO,
+        "problemas": [],
+        "revisor_ok": True,
+        "historial": [{"intento": 1, "problemas": []}],
+    }

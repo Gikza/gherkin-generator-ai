@@ -86,6 +86,57 @@ test.describe('Respuestas a las preguntas de aclaración', () => {
   });
 });
 
+test.describe('Reporte de bug', () => {
+  // Pasa a la pestaña de reportes, escribe la descripción y aprieta "Generar reporte".
+  async function generarReporte(page: Page, descripcion: string) {
+    await page.getByRole('tab', { name: 'Reporte de bug' }).click();
+    const cuadro = page.getByLabel('Descripción del bug');
+    await cuadro.fill(descripcion);
+    await cuadro.press('Control+Enter');
+    await page.getByRole('button', { name: 'Generar reporte' }).click();
+  }
+
+  test('muestra un error si la descripción está vacía', async ({ page }) => {
+    await generarReporte(page, '');
+    await expect(page.getByText('Describí el bug antes de generar el reporte.')).toBeVisible();
+  });
+
+  test('genera el reporte con su validación', async ({ page }) => {
+    await generarReporte(page, 'Al iniciar sesión con datos válidos aparece un error 500.');
+
+    await expect(page.getByText('Sin problemas graves.')).toBeVisible();
+    for (const regla of ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07']) {
+      await expect(page.getByText(`${regla}: OK`)).toBeVisible();
+    }
+    await expect(page.getByRole('heading', { name: 'Reporte', exact: true })).toBeVisible();
+    await expect(page.getByText('[Login] Iniciar sesión con credenciales válidas').first()).toBeVisible();
+  });
+
+  test('descarga el reporte generado', async ({ page }) => {
+    await generarReporte(page, 'Al iniciar sesión con datos válidos aparece un error 500.');
+
+    const descarga = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Descargar reporte' }).click();
+    const archivo = await descarga;
+
+    expect(archivo.suggestedFilename()).toBe('reporte_bug.md');
+    const contenido = readFileSync(await archivo.path(), 'utf-8');
+    expect(contenido.startsWith('**Título:**')).toBe(true);
+  });
+
+  test('pide datos esenciales y genera después de responder', async ({ page }) => {
+    await generarReporte(page, 'El login no anda.');
+
+    await expect(page.getByText('Faltan datos esenciales para redactar el reporte')).toBeVisible();
+    const respuesta = page.getByLabel('Pregunta 1: ¿Qué pasa exactamente cuando falla?');
+    await respuesta.fill('Aparece un error 500');
+    await respuesta.press('Enter');
+    await page.getByRole('button', { name: 'Generar con respuestas' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Reporte', exact: true })).toBeVisible();
+  });
+});
+
 test.describe('Manejo de errores', () => {
   test('muestra un mensaje claro si la IA tarda demasiado', async ({ page }) => {
     await generar(page, 'ERROR_TIMEOUT');

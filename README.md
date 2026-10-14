@@ -1,8 +1,13 @@
-# Generador de casos Gherkin con IA
+# Generador de casos Gherkin y reportes de bugs con IA
 
 [![Tests](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml)
 
-Herramienta que genera escenarios de prueba en **Gherkin (español)** a partir de una historia de usuario, usando la API de Claude. Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado pasa por validaciones automáticas, un revisor IA y un ciclo de corrección antes de entregarse.
+Herramienta para el trabajo diario de un QA, con la API de Claude. Tiene dos funciones:
+
+1. **Casos Gherkin:** genera escenarios de prueba en Gherkin (español) a partir de una historia de usuario.
+2. **Reportes de bugs:** redacta un reporte claro y reproducible, listo para Jira, a partir de lo que cuenta el QA y un log opcional.
+
+Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado pasa por validaciones automáticas, un revisor IA y un ciclo de corrección antes de entregarse. Las dos funciones usan **el mismo ciclo**; solo cambian las reglas.
 
 > Proyecto de portfolio en desarrollo. Autora: Gikza, QA con más de 5 años de experiencia, en camino a Automation QA con IA.
 
@@ -12,6 +17,12 @@ Herramienta que genera escenarios de prueba en **Gherkin (español)** a partir d
 - Si la historia es ambigua (por ejemplo, "la búsqueda debe ser rápida"), **pregunta en lugar de inventar requisitos**.
 - Las preguntas se **responden en la misma pantalla**: la herramienta agrega las respuestas a la historia y vuelve a generar. Las preguntas que quedan sin responder se toman como supuestos y se anotan en el archivo.
 - Muestra los supuestos que tomó, la tabla de cobertura por criterio y los problemas que quedaron sin resolver.
+
+### Reportes de bugs
+
+- Escribís el bug con tus palabras y, si querés, pegás un log o error de consola.
+- Si faltan datos esenciales (qué pasó, qué debería pasar o cómo se llega al error), **pregunta**. Lo que no es esencial, como el navegador o la versión, queda marcado como `[Completar: ...]`: **nunca se inventa**.
+- El reporte incluye título con módulo, entorno, precondiciones, pasos, resultado esperado y actual, severidad justificada, frecuencia, evidencia y **1 o 2 casos de regresión en Gherkin** para verificar el arreglo.
 
 ## Cómo funciona
 
@@ -39,6 +50,13 @@ La calidad se controla con una **checklist de 23 reglas**, armada a partir de re
 
 La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para que el comportamiento sea predecible.
 
+Los reportes de bugs tienen sus propias reglas, con el mismo criterio de capas:
+
+| Capa | Reglas | Ejemplos |
+|---|---|---|
+| Python | B01 a B07 | Campos obligatorios y en orden, título con `[Módulo]` y hasta 80 caracteres, severidad de la escala con justificación, frecuencia válida, al menos 2 pasos, esperado distinto de actual, 1 o 2 casos de regresión |
+| Revisor IA | B10 a B15 | Datos inventados, severidad incoherente, pasos no reproducibles, resultado actual que no copia el error, log sin explicar |
+
 ## Lo que aprendí probando la IA
 
 - **Validación en verde no es calidad.** La primera salida real pasó las 4 validaciones de forma y tenía 4 errores de contenido, entre ellos una tabla de cobertura que citaba un escenario que no existía.
@@ -53,7 +71,10 @@ La **gravedad** de cada regla la define una tabla fija en Python, no la IA, para
 |---|---|
 | `app.py` | Interfaz web (Streamlit) |
 | `aclaraciones.py` | Une la historia con las respuestas a las preguntas (sin IA) |
-| `generador.py` | Generación, ciclo de revisión y corrección |
+| `reporte.py` | Reportes de bugs: arma la entrada y reutiliza el ciclo de `generador.py` |
+| `reporte_prompt.py` | Instrucciones del generador y del revisor de reportes, y su tabla de gravedad |
+| `reporte_validador.py` | Reglas B01 a B07, verificables con Python |
+| `generador.py` | Generación y ciclo de revisión y corrección (compartido por las dos funciones) |
 | `prompt.py` | Instrucciones del generador (checklist como *system prompt*) |
 | `revisor.py` | Revisor IA y tabla de gravedad |
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
@@ -82,11 +103,13 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-23 tests:
+50 tests:
 
-- **Validador (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
+- **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
 - **Prompts (2):** generador y revisor comparten el mismo criterio de permisos.
+- **Validador de reportes (21):** cada regla B01 a B07 con casos que pasan y que fallan.
+- **Ciclo de revisión (6):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones y se queda con la última versión si la IA responde con preguntas.
 
 ```bash
 pytest -v
@@ -98,7 +121,7 @@ En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwrig
 
 ## Tests de interfaz (Playwright + TypeScript)
 
-8 tests end-to-end que cubren la validación de la entrada, las respuestas de la IA, las respuestas a las preguntas de aclaración, la descarga del `.feature` y el manejo de errores.
+12 tests end-to-end que cubren las dos pestañas: validación de la entrada, respuestas de la IA, preguntas de aclaración, descargas y manejo de errores.
 
 ```bash
 cd e2e
@@ -113,6 +136,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 | Validación de la entrada | Historia vacía y solo con espacios |
 | Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga |
 | Respuestas a las preguntas | Generar después de responder; exigir al menos una respuesta |
+| Reporte de bug | Descripción vacía, generación con validación, descarga y preguntas por datos esenciales |
 | Manejo de errores | Mensaje claro si la IA tarda demasiado |
 
 ## Próximos pasos
@@ -121,7 +145,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 - [x] Tests unitarios del validador con `pytest`
 - [x] Integración continua con GitHub Actions
 - [x] Responder las preguntas de aclaración desde la misma pantalla
-- [ ] Generación de reportes de bugs (segunda funcionalidad)
+- [x] Generación de reportes de bugs (segunda funcionalidad)
 
 ## Stack
 

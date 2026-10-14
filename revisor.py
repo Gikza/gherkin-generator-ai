@@ -54,10 +54,10 @@ GRAVEDAD_POR_REGLA = {
 }
 
 
-def aplicar_gravedad(problemas):
+def aplicar_gravedad(problemas, tabla=GRAVEDAD_POR_REGLA):
     """Reemplaza la gravedad que propuso la IA por la de la tabla fija."""
     for problema in problemas:
-        problema["gravedad"] = GRAVEDAD_POR_REGLA.get(problema.get("regla"), "baja")
+        problema["gravedad"] = tabla.get(problema.get("regla"), "baja")
     return problemas
 
 
@@ -69,17 +69,22 @@ def extraer_json(texto):
     return json.loads(texto[inicio:fin + 1])
 
 
-def revisar(historia, feature):
-    """Devuelve la lista de problemas encontrados por el revisor IA."""
+def revisar(entrada, salida, prompt=REVISOR_PROMPT, tabla=GRAVEDAD_POR_REGLA,
+            etiquetas=("HISTORIA DE USUARIO", "ARCHIVO .feature")):
+    """Devuelve la lista de problemas encontrados por el revisor IA.
+
+    Por defecto revisa casos Gherkin; para reportes de bugs se le pasan
+    otro prompt, otra tabla de gravedad y otras etiquetas.
+    """
     cliente = Anthropic(timeout=120)
     respuesta = cliente.messages.create(
         model=os.environ["CLAUDE_MODEL"],
         max_tokens=8000,
-        system=REVISOR_PROMPT,
+        system=prompt,
         messages=[{
             "role": "user",
-            "content": f"HISTORIA DE USUARIO:\n{historia}\n\nARCHIVO .feature:\n{feature}",
+            "content": f"{etiquetas[0]}:\n{entrada}\n\n{etiquetas[1]}:\n{salida}",
         }],
     )
     texto = "".join(b.text for b in respuesta.content if b.type == "text")
-    return aplicar_gravedad(extraer_json(texto).get("problemas", []))
+    return aplicar_gravedad(extraer_json(texto).get("problemas", []), tabla)
