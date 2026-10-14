@@ -11,3 +11,6 @@ test-results/
 .pytest_cache/
 node_modules/
 playwright-report/
+
+# Archivos que deja Claude (carrusel, etc.): no van al repo
+Claude outputs/
