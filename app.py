@@ -171,10 +171,11 @@ with pestana_bug:
         mostrar_revision(resultado, validar_reporte(reporte))
 
         st.subheader("Reporte")
-        # Markdown une las líneas seguidas: se fuerza un salto por línea.
+        # Markdown une las líneas seguidas: se fuerza un salto por línea, y cada campo
+        # va en su propio párrafo para que no quede metido dentro de la lista de pasos.
         # Los casos de regresión se muestran aparte, como código Gherkin.
         texto, _, casos = reporte.partition("**Casos de regresión:**")
-        st.markdown(texto.strip().replace("\n", "  \n"))
+        st.markdown(texto.strip().replace("\n", "  \n").replace("  \n**", "\n\n**"))
         if casos.strip():
             st.markdown("**Casos de regresión:**")
             st.code(casos.strip("\n"), language="gherkin", wrap_lines=True)

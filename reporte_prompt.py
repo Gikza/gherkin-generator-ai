@@ -40,7 +40,7 @@ Usá exactamente estos campos, en este orden, cada uno al principio de una líne
 **Resultado actual:** ...
 **Severidad:** <Crítica, Alta, Media o Baja> – <justificación en una línea>
 **Frecuencia:** Siempre, Intermitente (x de y intentos) o Una vez
-**Evidencia:** qué hay o qué conviene adjuntar
+**Evidencia:** solo lo que el QA aportó; lo que falta adjuntar va como [Completar: adjuntar ...]
 **Notas:** solo si aporta (hipótesis de causa, línea del log); si no, omití este campo
 **Casos de regresión:**
 Escenario: ...
@@ -56,6 +56,9 @@ códigos ni pasos que la descripción o el log no mencionan. Lo que falta va com
 máximo 80 caracteres.
 - Pasos: al menos 2, numerados, una acción por paso, en orden.
 - Resultado actual: si la descripción o el log traen un mensaje de error, copialo textual.
+- Evidencia: nombrá SOLO lo que el QA aportó (por ejemplo, la línea del log). Nunca escribas \
+una captura, un video o un log completo como si existieran: lo que conviene adjuntar va como \
+"[Completar: adjuntar <qué>]".
 - Si hay log: en Notas citá la línea relevante y explicá en una oración qué indica.
 - Severidad:
   - Crítica: bloquea una funcionalidad principal y no hay alternativa.
@@ -73,7 +76,8 @@ Recibís lo que contó el QA (descripción y, si hay, log) y el reporte. Tu tare
 errores de CONTENIDO según estas reglas:
 
 - B10: el reporte inventa datos que la descripción o el log no mencionan (entorno, versiones, \
-navegadores, usuarios, URLs, mensajes de error, códigos o pasos).
+navegadores, usuarios, URLs, mensajes de error, códigos o pasos). Incluye la Evidencia: si \
+menciona capturas, videos o logs que el QA no aportó, sin "[Completar: ...]", es B10.
 - B11: la severidad no es coherente con la escala (Crítica: bloquea una funcionalidad principal \
 sin alternativa; Alta: funcionalidad importante con alternativa difícil; Media: funcionalidad \
 secundaria; Baja: cosmético o de texto).
