@@ -94,7 +94,9 @@ Respondé SOLO con JSON válido, sin texto adicional y sin ```, con este formato
 # La gravedad la decide Python, no la IA (misma decisión que en los casos Gherkin).
 GRAVEDAD_REPORTE = {
     "B10": "alta",  # datos inventados: el reporte engaña a quien lo lee
-    "B11": "alta",  # severidad incoherente: cambia la prioridad del ticket
+    # B11 es solo una sugerencia: la severidad suele ser discutible y la decide la QA.
+    # Con "alta", el revisor forzaba su criterio (bajó Alta → Media en un caso defendible).
+    "B11": "baja",
     "B12": "alta",  # pasos no reproducibles: el desarrollador no puede ver el bug
     "B13": "alta",  # resultado actual que no coincide con lo que pasó
     "B14": "baja",  # log sin explicar

@@ -57,12 +57,16 @@ Los reportes de bugs tienen sus propias reglas, con el mismo criterio de capas:
 | Python | B01 a B07 | Campos obligatorios y en orden, título con `[Módulo]` y hasta 80 caracteres, severidad de la escala con justificación, frecuencia válida, al menos 2 pasos, esperado distinto de actual, 1 o 2 casos de regresión |
 | Revisor IA | B10 a B15 | Datos inventados, severidad incoherente, pasos no reproducibles, resultado actual que no copia el error, log sin explicar |
 
+La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó a bajar un bug de Alta a Media en un caso discutible. La severidad depende del contexto del negocio, así que la decide la QA, no la IA.
+
 ## Lo que aprendí probando la IA
 
 - **Validación en verde no es calidad.** La primera salida real pasó las 4 validaciones de forma y tenía 4 errores de contenido, entre ellos una tabla de cobertura que citaba un escenario que no existía.
 - **Ajustar el prompt funcionó y lo medí.** Después del ajuste, en 3 ejecuciones con la misma historia, los 4 tipos de error no volvieron a aparecer.
 - **La salida no es determinística.** La misma historia generó 6, 10 y 10 escenarios, con cobertura distinta. Por eso los controles verifican *propiedades* (cobertura, límites, etiquetas) y no comparan contra un texto fijo.
 - **Dos IA pueden no compartir el mismo criterio.** Al responder que el cupón lo genera "un administrador", el generador agregó casos de permisos (rol denegado, acceso por URL directa, sin sesión) y el revisor los marcó como requisitos inventados. La solución fue definir el criterio una sola vez (`CRITERIO_PERMISOS`) y usarlo en los dos prompts, con un test que lo verifica.
+- **La corrección también puede inventar.** En un reporte de bug, al corregir, la IA afirmó que había capturas y un stack trace que el QA nunca dio. El revisor lo detectó (B10) y se corrigió en el intento siguiente. Una sola pasada de la IA no alcanza, ni siquiera cuando corrige.
+- **No todo lo tiene que decidir la IA.** El revisor obligó a cambiar la severidad de un bug de Alta a Media en un caso discutible. Ahora la severidad es solo una sugerencia y la decide la QA.
 - **El revisor también se equivoca.** Clasificó el mismo problema con gravedades distintas entre intentos y marcó un posible falso positivo. Ningún componente es confiable por separado: la combinación de capas y la revisión humana final es lo que da calidad.
 
 ## Estructura
@@ -103,11 +107,11 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-50 tests:
+51 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
-- **Prompts (2):** generador y revisor comparten el mismo criterio de permisos.
+- **Prompts (3):** generador y revisor comparten el mismo criterio de permisos, y la severidad del reporte es solo una sugerencia.
 - **Validador de reportes (21):** cada regla B01 a B07 con casos que pasan y que fallan.
 - **Ciclo de revisión (6):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones y se queda con la última versión si la IA responde con preguntas.
 

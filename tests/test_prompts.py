@@ -2,6 +2,7 @@
 import json
 
 from prompt import CRITERIO_PERMISOS, SYSTEM_PROMPT
+from reporte_prompt import GRAVEDAD_REPORTE
 from revisor import REVISOR_PROMPT
 
 
@@ -16,3 +17,8 @@ def test_el_ejemplo_de_json_del_revisor_es_valido():
     # El prompt del revisor es un f-string: las llaves del JSON tienen que quedar simples.
     ejemplo = REVISOR_PROMPT.strip().splitlines()[-1]
     assert json.loads(ejemplo)["problemas"][0]["regla"] == "R11"
+
+
+def test_la_severidad_del_reporte_es_solo_una_sugerencia():
+    # Decisión de diseño: la IA no corrige la severidad por su cuenta; la decide la QA.
+    assert GRAVEDAD_REPORTE["B11"] == "baja"
