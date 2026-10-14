@@ -1,13 +1,13 @@
 """Instrucciones para la IA en los reportes de bugs: generador, revisor y gravedad.
 
-El formato sigue la skill "bug-report": listo para pegar en Jira.
+El formato sigue la skill "bug-report": listo para pegar en cualquier herramienta de gestión (Jira, Azure DevOps, Trello, etc.).
 """
 
 # Lo que falta y no es esencial se marca así, en lugar de inventarlo.
 MARCA_COMPLETAR = "[Completar:"
 
 REPORTE_PROMPT = """Sos un QA senior. Tu tarea es redactar un reporte de bug claro y \
-reproducible, en español, listo para Jira, a partir de lo que cuenta otro QA y, si lo hay, \
+reproducible, en español, listo para pegar en cualquier herramienta de gestión, a partir de lo que cuenta otro QA y, si lo hay, \
 un log o error de consola.
 
 ## Paso 1: decidir si podés redactar

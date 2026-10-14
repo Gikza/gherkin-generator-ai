@@ -5,7 +5,7 @@
 Herramienta para el trabajo diario de un QA, con la API de Claude. Tiene dos funciones:
 
 1. **Casos Gherkin:** genera escenarios de prueba en Gherkin (español) a partir de una historia de usuario.
-2. **Reportes de bugs:** redacta un reporte claro y reproducible, listo para Jira, a partir de lo que cuenta el QA y un log opcional.
+2. **Reportes de bugs:** redacta un reporte claro y reproducible, listo para cualquier herramienta de gestión (Jira, Azure DevOps, Trello, etc.), a partir de lo que cuenta el QA y un log opcional.
 
 Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado pasa por validaciones automáticas, un revisor IA y un ciclo de corrección antes de entregarse. Las dos funciones usan **el mismo ciclo**; solo cambian las reglas.
 
