@@ -168,7 +168,7 @@ with pestana_bug:
 
     if resultado and resultado["tipo"] == "reporte":
         reporte = resultado["contenido"]
-        mostrar_revision(resultado, validar_reporte(reporte))
+        mostrar_revision(resultado, validar_reporte(reporte, st.session_state.get("bug_entrada", "")))
 
         st.subheader("Reporte")
         # Markdown une las líneas seguidas: se fuerza un salto por línea, y cada campo

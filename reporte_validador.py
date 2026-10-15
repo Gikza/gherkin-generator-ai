@@ -7,6 +7,8 @@
   B05 - Al menos 2 pasos numerados
   B06 - Resultado esperado y actual completos y distintos
   B07 - 1 o 2 casos de regresión en Gherkin
+  B08 - Los datos concretos del reporte (URLs, rutas, códigos, versiones, textos entre
+        comillas, navegadores y sistemas) aparecen en lo que contó el QA: no están inventados
 """
 import re
 
@@ -119,6 +121,79 @@ def regla_b07(texto):
     return errores
 
 
+# --- B08: datos inventados, verificados con código y no con la IA -----------------
+# Campos donde un dato concreto tiene que venir sí o sí de lo que contó el QA.
+# Quedan afuera el resultado esperado, las notas (hipótesis) y los casos de regresión,
+# porque describen lo que debería pasar o lo que se sospecha, no lo que pasó.
+CAMPOS_VERIFICABLES = [
+    "Título", "Entorno", "Precondiciones", "Pasos para reproducir",
+    "Resultado actual", "Frecuencia", "Evidencia",
+]
+
+NOMBRES_DE_PLATAFORMAS = [
+    "Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave",
+    "Windows", "macOS", "Linux", "Ubuntu", "Android", "iOS", "iPhone", "iPad",
+]
+
+_DATOS_CONCRETOS = [
+    r'"([^"\n]{3,})"',                     # "texto entre comillas"
+    r"«([^»\n]{3,})»",                      # «texto entre comillas»
+    r"`([^`\n]{3,})`",                      # `código`
+    r"(https?://[^\s)\]]+)",               # URLs
+    r"(?<![\w/])(/[\w.\-{}]+(?:/[\w.\-{}]+)*)",  # rutas como /api/carrito/cupon
+    r"\b(\d+(?:\.\d+)+)\b",               # versiones como 118.0.5
+    r"\b(\d{3,})\b",                        # códigos y números de 3 o más cifras
+    r"\b(" + "|".join(NOMBRES_DE_PLATAFORMAS) + r")\b",
+]
+
+
+def _normalizar(texto):
+    """Minúsculas, comillas rectas y espacios simples, para comparar sin falsos positivos."""
+    texto = texto.replace("“", '"').replace("”", '"').replace("’", "'")
+    return " ".join(texto.lower().split())
+
+
+def datos_concretos(texto):
+    """Devuelve los datos concretos de los campos verificables, sin los [Completar: ...]."""
+    datos = []
+    for nombre, contenido in leer_campos(texto):
+        if nombre not in CAMPOS_VERIFICABLES:
+            continue
+        contenido = re.sub(r"\[Completar[^\]]*\]", " ", contenido)
+        for patron in _DATOS_CONCRETOS:
+            for dato in re.findall(patron, contenido):
+                dato = dato.strip().rstrip(".,;:")
+                if dato and dato not in datos:
+                    datos.append(dato)
+    return datos
+
+
+# Adjuntos que la Evidencia no puede dar por hechos si el QA no los mencionó.
+TIPOS_DE_ADJUNTO = ["captura", "screenshot", "video", "grabación", "stack trace", "har"]
+
+
+def adjuntos_no_aportados(texto, fuente):
+    """Adjuntos que la Evidencia da por hechos (fuera de [Completar]) y el QA no mencionó."""
+    evidencia = re.sub(r"\[Completar[^\]]*\]", " ", campo(texto, "Evidencia"))
+    evidencia = _normalizar(evidencia)
+    return [a for a in TIPOS_DE_ADJUNTO
+            if re.search(rf"\b{a}", evidencia) and not re.search(rf"\b{a}", fuente)]
+
+
+def regla_b08(texto, entrada):
+    """Nada de lo que afirma el reporte puede faltar en lo que contó el QA.
+
+    Revisa los datos concretos (URLs, rutas, códigos, versiones, comillas, plataformas)
+    y los adjuntos que la Evidencia da por hechos (capturas, videos, stack traces).
+    """
+    fuente = _normalizar(entrada or "")
+    errores = [f'Dato que no aparece en lo que contó el QA: "{dato}"'
+               for dato in datos_concretos(texto) if _normalizar(dato) not in fuente]
+    errores += [f'La Evidencia menciona "{a}", pero el QA no la aportó: va como [Completar: adjuntar ...]'
+                for a in adjuntos_no_aportados(texto, fuente)]
+    return errores
+
+
 REGLAS = {
     "B01": regla_b01,
     "B02": regla_b02,
@@ -130,6 +205,11 @@ REGLAS = {
 }
 
 
-def validar_reporte(texto):
-    """Aplica todas las reglas al reporte. Devuelve {regla: [errores]}."""
-    return {nombre: regla(texto) for nombre, regla in REGLAS.items()}
+def validar_reporte(texto, entrada):
+    """Aplica todas las reglas al reporte. Devuelve {regla: [errores]}.
+
+    entrada es lo que contó el QA: la usa B08 para detectar datos inventados.
+    """
+    errores = {nombre: regla(texto) for nombre, regla in REGLAS.items()}
+    errores["B08"] = regla_b08(texto, entrada)
+    return errores

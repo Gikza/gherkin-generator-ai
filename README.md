@@ -54,8 +54,10 @@ Los reportes de bugs tienen sus propias reglas, con el mismo criterio de capas:
 
 | Capa | Reglas | Ejemplos |
 |---|---|---|
-| Python | B01 a B07 | Campos obligatorios y en orden, título con `[Módulo]` y hasta 80 caracteres, severidad de la escala con justificación, frecuencia válida, al menos 2 pasos, esperado distinto de actual, 1 o 2 casos de regresión |
+| Python | B01 a B08 | Campos obligatorios y en orden, título con `[Módulo]` y hasta 80 caracteres, severidad de la escala con justificación, frecuencia válida, al menos 2 pasos, esperado distinto de actual, 1 o 2 casos de regresión y **datos inventados (B08)** |
 | Revisor IA | B10 a B15 | Datos inventados, severidad incoherente, pasos no reproducibles, resultado actual que no copia el error, log sin explicar |
+
+**B08 verifica con código, no con la IA, que el reporte no invente datos.** Cada dato concreto (URLs, rutas, códigos, versiones, textos entre comillas, navegadores y sistemas) tiene que aparecer en lo que contó el QA, y la Evidencia no puede dar por hechas capturas, videos o stack traces que el QA no aportó: van como `[Completar: adjuntar ...]`. No revisa el resultado esperado, las notas ni los casos de regresión, porque describen lo que debería pasar o lo que se sospecha.
 
 La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó a bajar un bug de Alta a Media en un caso discutible. La severidad depende del contexto del negocio, así que la decide la QA, no la IA.
 
@@ -66,6 +68,7 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 - **La salida no es determinística.** La misma historia generó 6, 10 y 10 escenarios, con cobertura distinta. Por eso los controles verifican *propiedades* (cobertura, límites, etiquetas) y no comparan contra un texto fijo.
 - **Dos IA pueden no compartir el mismo criterio.** Al responder que el cupón lo genera "un administrador", el generador agregó casos de permisos (rol denegado, acceso por URL directa, sin sesión) y el revisor los marcó como requisitos inventados. La solución fue definir el criterio una sola vez (`CRITERIO_PERMISOS`) y usarlo en los dos prompts, con un test que lo verifica.
 - **La corrección también puede inventar.** En un reporte de bug, al corregir, la IA afirmó que había capturas y un stack trace que el QA nunca dio. El revisor lo detectó (B10) y se corrigió en el intento siguiente. Una sola pasada de la IA no alcanza, ni siquiera cuando corrige.
+- **Una IA controlando a otra no alcanza.** En otra prueba, el revisor dejó pasar adjuntos inventados. Además, en LinkedIn me preguntaron cómo decide la herramienta que un dato no lo sabe: lo decidía el modelo. Por eso agregué B08, que lo verifica con código contra lo que pegó el QA.
 - **No todo lo tiene que decidir la IA.** El revisor obligó a cambiar la severidad de un bug de Alta a Media en un caso discutible. Ahora la severidad es solo una sugerencia y la decide la QA.
 - **El revisor también se equivoca.** Clasificó el mismo problema con gravedades distintas entre intentos y marcó un posible falso positivo. Ningún componente es confiable por separado: la combinación de capas y la revisión humana final es lo que da calidad.
 
@@ -77,7 +80,7 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 | `aclaraciones.py` | Une la historia con las respuestas a las preguntas (sin IA) |
 | `reporte.py` | Reportes de bugs: arma la entrada y reutiliza el ciclo de `generador.py` |
 | `reporte_prompt.py` | Instrucciones del generador y del revisor de reportes, y su tabla de gravedad |
-| `reporte_validador.py` | Reglas B01 a B07, verificables con Python |
+| `reporte_validador.py` | Reglas B01 a B08, verificables con Python (B08: datos inventados) |
 | `generador.py` | Generación y ciclo de revisión y corrección (compartido por las dos funciones) |
 | `prompt.py` | Instrucciones del generador (checklist como *system prompt*) |
 | `revisor.py` | Revisor IA y tabla de gravedad |
@@ -107,13 +110,13 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-51 tests:
+62 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
 - **Prompts (3):** generador y revisor comparten el mismo criterio de permisos, y la severidad del reporte es solo una sugerencia.
-- **Validador de reportes (21):** cada regla B01 a B07 con casos que pasan y que fallan.
-- **Ciclo de revisión (6):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones y se queda con la última versión si la IA responde con preguntas.
+- **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
+- **Ciclo de revisión (7):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones, se queda con la última versión si la IA responde con preguntas y le pasa al validador lo que contó el QA.
 
 ```bash
 pytest -v

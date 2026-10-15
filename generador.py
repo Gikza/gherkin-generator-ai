@@ -98,7 +98,7 @@ def ciclo_de_revision(entrada, generar_fn, corregir_fn, revisar_fn, validar_fn,
         except ValueError:
             contenido, revisor_ok = [], False  # el revisor no devolvió JSON válido
 
-        problemas = problemas_de_forma(salida, validar_fn) + contenido
+        problemas = problemas_de_forma(salida, lambda texto: validar_fn(texto, entrada)) + contenido
         graves = [p for p in problemas if p.get("gravedad") == "alta"]
         historial.append({"intento": intento + 1, "problemas": problemas})
 

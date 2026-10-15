@@ -58,6 +58,13 @@ def generar_con_revision(historia, avisar=lambda mensaje: None):
 #   - Descripción con "ERROR_TIMEOUT"  -> la IA tarda demasiado
 #   - Cualquier otra descripción       -> un reporte válido
 
+# Lo que "contó el QA" para el reporte simulado: B08 lo usa para verificar los datos.
+ENTRADA_SIMULADA = (
+    "Descripción del QA:\n"
+    'Al iniciar sesión con usuario y contraseña válidos aparece "Error 500: Internal Server Error" '
+    "y no entro a mi cuenta."
+)
+
 REPORTE_SIMULADO = """**Título:** [Login] Iniciar sesión con credenciales válidas – muestra error 500
 **Entorno:** [Completar: ambiente, navegador y versión, sistema operativo]
 **Precondiciones:** El usuario de prueba está registrado.

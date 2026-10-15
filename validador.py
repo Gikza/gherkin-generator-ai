@@ -111,8 +111,11 @@ REGLAS = {
 }
 
 
-def validar_texto(texto):
-    """Aplica todas las reglas a un texto. Devuelve {regla: [errores]}."""
+def validar_texto(texto, entrada=None):
+    """Aplica todas las reglas a un texto. Devuelve {regla: [errores]}.
+
+    entrada (la historia) no se usa: está para tener la misma firma que validar_reporte.
+    """
     return {nombre: regla(texto) for nombre, regla in REGLAS.items()}
 
 

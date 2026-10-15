@@ -23,7 +23,7 @@ def correr(revisiones, corregir_fn=None, generar_fn=None):
         generar_fn=generar_fn or (lambda e: respuesta("versión 1")),
         corregir_fn=corregir_fn or corregir,
         revisar_fn=lambda e, s: pendientes.pop(0),
-        validar_fn=lambda s: {"B01": []},
+        validar_fn=lambda s, e: {"B01": []},
         tipo="reporte",
     )
     return resultado, llamadas["corregir"]
@@ -64,3 +64,17 @@ def test_si_al_corregir_devuelve_preguntas_se_queda_con_la_ultima_version():
 def test_si_genera_preguntas_las_devuelve_sin_revisar():
     resultado, _ = correr([], generar_fn=lambda e: respuesta("1. ¿Qué pasa?", "preguntas"))
     assert resultado == {"tipo": "preguntas", "contenido": "1. ¿Qué pasa?"}
+
+
+def test_el_validador_recibe_la_entrada():
+    # B08 compara el reporte con lo que contó el QA: el ciclo tiene que pasarle la entrada.
+    recibidas = []
+    ciclo_de_revision(
+        "lo que contó el QA",
+        generar_fn=lambda e: respuesta("versión 1"),
+        corregir_fn=lambda e, s, g: respuesta("versión 2"),
+        revisar_fn=lambda e, s: [],
+        validar_fn=lambda s, e: recibidas.append(e) or {"B01": []},
+        tipo="reporte",
+    )
+    assert recibidas == ["lo que contó el QA"]

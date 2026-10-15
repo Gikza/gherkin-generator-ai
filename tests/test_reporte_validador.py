@@ -3,18 +3,18 @@ import pytest
 
 from reporte import armar_entrada
 from reporte_validador import leer_campos, validar_reporte
-from simulador import REPORTE_SIMULADO
+from simulador import ENTRADA_SIMULADA, REPORTE_SIMULADO
 
 
-def reglas_con_fallas(texto):
-    return {regla for regla, errores in validar_reporte(texto).items() if errores}
+def reglas_con_fallas(texto, entrada=ENTRADA_SIMULADA):
+    return {regla for regla, errores in validar_reporte(texto, entrada).items() if errores}
 
 
-def cambiar(campo, nuevo):
-    """Devuelve el reporte simulado con un campo reemplazado (o quitado si nuevo es None)."""
+def cambiar(campo, nuevo, texto=REPORTE_SIMULADO):
+    """Devuelve el reporte con un campo reemplazado (o quitado si nuevo es None)."""
     lineas = []
     saltear = False
-    for linea in REPORTE_SIMULADO.splitlines():
+    for linea in texto.splitlines():
         if linea.startswith("**"):
             saltear = linea.startswith(f"**{campo}:**")
             if saltear and nuevo is not None:
@@ -98,3 +98,62 @@ def test_armar_entrada_con_y_sin_log():
     assert armar_entrada("  El login falla  ") == "Descripción del QA:\nEl login falla"
     con_log = armar_entrada("El login falla", "Error 500")
     assert con_log.endswith("Log o error de consola:\nError 500")
+
+
+# --- B08: datos inventados, verificados con código ----------------------------
+
+LOG = ("POST /api/carrito/cupon 500 - TypeError: Cannot read properties of undefined "
+       "(reading 'descuento')")
+ENTRADA_CUPON = armar_entrada(
+    "Al aplicar el cupón VERANO10 en el carrito, el total no cambia y aparece un mensaje en rojo.",
+    LOG,
+)
+
+
+# Reporte simulado adaptado al bug del cupón: sin cambios, B08 no encuentra nada inventado.
+REPORTE_CUPON = cambiar("Título", "[Carrito] Aplicar cupón VERANO10 – el total no cambia",
+                        cambiar("Resultado actual", f"El total no cambia. Log: {LOG}"))
+
+
+def con_entrada_del_cupon(campo_cambiado, valor):
+    return reglas_con_fallas(cambiar(campo_cambiado, valor, REPORTE_CUPON), ENTRADA_CUPON)
+
+
+def test_b08_el_reporte_del_cupon_no_tiene_datos_inventados():
+    assert "B08" not in reglas_con_fallas(REPORTE_CUPON, ENTRADA_CUPON)
+
+
+def test_b08_acepta_datos_copiados_del_log():
+    assert "B08" not in con_entrada_del_cupon("Resultado actual", f"El total no cambia. Log: {LOG}")
+
+
+def test_b08_ignora_lo_que_esta_en_completar():
+    assert "B08" not in con_entrada_del_cupon("Entorno", "[Completar: navegador (Chrome, Firefox) y versión]")
+
+
+@pytest.mark.parametrize("campo_cambiado, inventado", [
+    ("Entorno", "Chrome 118 en Windows 11"),                       # plataforma y versión
+    ("Resultado actual", 'Aparece "Cupón inválido"'),               # mensaje entre comillas
+    ("Evidencia", "Ver https://jira.ejemplo.com/BUG-1"),            # URL
+    ("Pasos para reproducir", "1. Abrir /checkout/pago\n2. Aplicar el cupón."),  # ruta
+])
+def test_b08_detecta_datos_inventados(campo_cambiado, inventado):
+    assert "B08" in con_entrada_del_cupon(campo_cambiado, inventado)
+
+
+def test_b08_detecta_adjuntos_dados_por_hechos():
+    # El caso real que encontró el revisor IA, ahora detectado con código.
+    evidencia = ("Captura de pantalla del carrito con el mensaje en rojo, captura de la pestaña "
+                 "Network y el log completo de consola.")
+    assert "B08" in con_entrada_del_cupon("Evidencia", evidencia)
+
+
+def test_b08_acepta_adjuntos_pedidos_con_completar():
+    evidencia = f"Log: {LOG}. [Completar: adjuntar captura del mensaje en rojo]"
+    assert "B08" not in con_entrada_del_cupon("Evidencia", evidencia)
+
+
+def test_b08_no_revisa_hipotesis_ni_resultado_esperado():
+    texto = cambiar("Resultado esperado", "La llamada responde 200.")
+    texto = texto.replace("**Casos de regresión:**", "**Notas:** Posible `null` en el cupón.\n**Casos de regresión:**")
+    assert "B08" not in reglas_con_fallas(texto)

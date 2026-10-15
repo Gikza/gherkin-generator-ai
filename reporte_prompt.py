@@ -52,6 +52,9 @@ Escenario: ...
 - NUNCA inventes datos: ni entorno, versiones, navegadores, usuarios, URLs, mensajes de error, \
 códigos ni pasos que la descripción o el log no mencionan. Lo que falta va como \
 "[Completar: <qué falta>]".
+- Los datos concretos (URLs, rutas, códigos, versiones, textos entre comillas, navegadores \
+y sistemas operativos) se verifican automáticamente contra la descripción y el log: tienen que \
+aparecer ahí tal cual. Si no están, no los escribas.
 - Título: empieza con el módulo entre corchetes, describe la acción y el resultado incorrecto, \
 máximo 80 caracteres.
 - Pasos: al menos 2, numerados, una acción por paso, en orden.

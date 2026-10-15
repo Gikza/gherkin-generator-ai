@@ -101,11 +101,15 @@ test.describe('Reporte de bug', () => {
     await expect(page.getByText('Describí el bug antes de generar el reporte.')).toBeVisible();
   });
 
+  // Coincide con ENTRADA_SIMULADA (simulador.py), para que B08 encuentre los datos del reporte.
+  const descripcion =
+    'Al iniciar sesión con usuario y contraseña válidos aparece "Error 500: Internal Server Error" y no entro a mi cuenta.';
+
   test('genera el reporte con su validación', async ({ page }) => {
-    await generarReporte(page, 'Al iniciar sesión con datos válidos aparece un error 500.');
+    await generarReporte(page, descripcion);
 
     await expect(page.getByText('Sin problemas graves.')).toBeVisible();
-    for (const regla of ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07']) {
+    for (const regla of ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08']) {
       await expect(page.getByText(`${regla}: OK`)).toBeVisible();
     }
     await expect(page.getByRole('heading', { name: 'Reporte', exact: true })).toBeVisible();
@@ -113,7 +117,7 @@ test.describe('Reporte de bug', () => {
   });
 
   test('descarga el reporte generado', async ({ page }) => {
-    await generarReporte(page, 'Al iniciar sesión con datos válidos aparece un error 500.');
+    await generarReporte(page, descripcion);
 
     const descarga = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Descargar reporte' }).click();
