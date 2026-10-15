@@ -1,7 +1,7 @@
 """Tests de los prompts: generador y revisor tienen que compartir los mismos criterios."""
 import json
 
-from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS, SYSTEM_PROMPT
+from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS, CRITERIO_SUPUESTOS, SYSTEM_PROMPT
 from reporte_prompt import GRAVEDAD_REPORTE
 from revisor import REVISOR_PROMPT
 
@@ -29,3 +29,10 @@ def test_generador_y_revisor_usan_el_mismo_criterio_de_longitud():
     # y el revisor la marcaba como requisito inventado (R23).
     assert CRITERIO_LONGITUD in SYSTEM_PROMPT
     assert CRITERIO_LONGITUD in REVISOR_PROMPT
+
+
+def test_generador_y_revisor_usan_el_mismo_criterio_de_supuestos():
+    # Evaluación 2026-10-15_1901 (G05): un supuesto agregaba comportamiento nuevo
+    # ("el enlace es de un solo uso") y el revisor lo marcaba como inventado (R23).
+    assert CRITERIO_SUPUESTOS in SYSTEM_PROMPT
+    assert CRITERIO_SUPUESTOS in REVISOR_PROMPT
