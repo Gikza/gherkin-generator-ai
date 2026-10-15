@@ -2,6 +2,8 @@
 
 [![Tests](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Gikza/gherkin-generator-ai/actions/workflows/tests.yml)
 
+**[Probar la demo online](https://gherkin-generator-gikza.streamlit.app)**: resultados reales de la IA, sin instalar nada.
+
 Herramienta para el trabajo diario de un QA, con la API de Claude. Tiene dos funciones:
 
 1. **Casos Gherkin:** genera escenarios de prueba en Gherkin (español) a partir de una historia de usuario.
@@ -96,6 +98,8 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 | `pruebas_validador/` | Archivo roto a propósito para probar el validador |
 
 ## Modo demo
+
+Demo publicada en **[gherkin-generator-gikza.streamlit.app](https://gherkin-generator-gikza.streamlit.app)** (Streamlit Community Cloud). Si estuvo un tiempo sin visitas, la primera carga puede tardar unos segundos mientras se reactiva.
 
 Si la app arranca sin clave de la API (por ejemplo, publicada en Streamlit Community Cloud), entra en **modo demo**: muestra resultados **reales** de la IA, grabados durante la evaluación, con su validación automática y su historial de correcciones. No llama a la IA, así que no gasta créditos. Los ejemplos se graban con:
 
