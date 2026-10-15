@@ -1,0 +1,366 @@
+{
+  "modelo": "claude-haiku-5-5",
+  "resumen": {
+    "ejecuciones": 10,
+    "aprobadas": 10,
+    "porcentaje_aprobadas": 100,
+    "generadas": 7,
+    "con_graves_en_intento_1": 1,
+    "con_graves_finales": 0,
+    "con_b08_detectado": 0,
+    "intentos_promedio": 1.1,
+    "segundos_promedio": 34.3,
+    "llamadas_total": 19,
+    "tokens_entrada_total": 43985,
+    "tokens_salida_total": 42695,
+    "reglas_mas_frecuentes_intento_1": [
+      [
+        "R22",
+        1
+      ],
+      [
+        "R23",
+        1
+      ],
+      [
+        "B11",
+        1
+      ]
+    ]
+  },
+  "ejecuciones": [
+    {
+      "caso": "G01",
+      "nombre": "Cupón en el carrito (historia completa)",
+      "tipo": "gherkin",
+      "repeticion": 1,
+      "tipo_obtenido": "feature",
+      "intentos": 1,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "# language: es\n# Supuesto: el subtotal es la suma de los productos del carrito antes de aplicar el descuento.\n# Supuesto: el cliente registrado tiene sesión iniciada al estar en el carrito.\n# Pregunta abierta: ¿qué ocurre si el cliente intenta aplicar un segundo cupón (se muestra un mensaje o reemplaza al primero)?\n# Pregunta abierta: ¿un cupón que vence el mismo día de la compra sigue siendo válido?\n# Pregunta abierta: ¿cuál es la longitud máxima del campo de código de cupón?\n# Pregunta abierta: ¿el código del cupón distingue mayúsculas de minúsculas?\n\n@regresion\nCaracterística: Aplicar cupón de descuento en el carrito\n  Como cliente registrado quiero aplicar un cupón de descuento en el carrito antes de pagar para obtener el descuento en mi compra\n\n  Antecedentes:\n    Dado que el cliente registrado tiene sesión iniciada\n    Y tiene productos en el carrito de compra\n\n  @smoke\n  Escenario: Un cupón válido y vigente descuenta el porcentaje indicado del subtotal\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces el total de la compra es $18.000\n\n  @negativo\n  Escenario: Un cupón vencido muestra el mensaje \"El cupón expiró\" y el total no cambia\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vencido con código \"VENCIDO5\" del 5% de descuento\n    Cuando aplica el cupón \"VENCIDO5\"\n    Entonces se muestra el mensaje \"El cupón expiró\"\n    Y el total de la compra sigue siendo $20.000\n\n  @negativo\n  Escenario: Un cupón inexistente muestra el mensaje \"Cupón inválido\"\n    Dado que el subtotal del carrito es $20.000\n    Cuando aplica el cupón \"NOEXISTE\"\n    Entonces se muestra el mensaje \"Cupón inválido\"\n\n  @negativo\n  Escenario: Solo se puede aplicar un cupón por compra\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Y existe un cupón vigente con código \"OTRO20\" del 20% de descuento\n    Y ya aplicó el cupón \"VERANO10\" al carrito\n    Cuando aplica el cupón \"OTRO20\"\n    Entonces solo queda aplicado un cupón al carrito\n\n  @negativo\n  Escenario: Un subtotal menor a $10.000 muestra el mensaje \"Monto mínimo no alcanzado\"\n    Dado que el subtotal del carrito es $9.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se muestra el mensaje \"Monto mínimo no alcanzado\"\n\n  @negativo\n  Escenario: Un subtotal de $9.999,99 muestra el mensaje \"Monto mínimo no alcanzado\"\n    Dado que el subtotal del carrito es $9.999,99\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se muestra el mensaje \"Monto mínimo no alcanzado\"\n\n  Escenario: Un subtotal de $10.000,00 permite aplicar el cupón\n    Dado que el subtotal del carrito es $10.000,00\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces el total de la compra es $9.000\n\n  Escenario: Un subtotal de $10.000,01 permite aplicar el cupón\n    Dado que el subtotal del carrito es $10.000,01\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se aplica el descuento del cupón al total de la compra\n\n  @negativo\n  Esquema del escenario: Un código de cupón vacío, con solo espacios o con caracteres especiales no aplica ningún descuento\n    Dado que el subtotal del carrito es $20.000\n    Cuando aplica el código <codigo>\n    Entonces no se aplica ningún descuento\n    Y el total de la compra sigue siendo $20.000\n\n    Ejemplos:\n      | codigo    |\n      | \"\"        |\n      | \"   \"     |\n      | \"%$#@!\"   |\n\n# Cobertura: Un cupón válido y vigente descuenta el porcentaje indicado del subtotal -> Un cupón válido y vigente descuenta el porcentaje indicado del subtotal\n# Cobertura: Un cupón vencido muestra \"El cupón expiró\" y el total no cambia -> Un cupón vencido muestra el mensaje \"El cupón expiró\" y el total no cambia\n# Cobertura: Un cupón que no existe muestra \"Cupón inválido\" -> Un cupón inexistente muestra el mensaje \"Cupón inválido\"\n# Cobertura: Solo se puede aplicar un cupón por compra -> Solo se puede aplicar un cupón por compra\n# Cobertura: Subtotal menor a $10.000 muestra \"Monto mínimo no alcanzado\" -> Un subtotal menor a $10.000 muestra el mensaje \"Monto mínimo no alcanzado\"; Un subtotal de $9.999,99 muestra el mensaje \"Monto mínimo no alcanzado\"; Un subtotal de $10.000,00 permite aplicar el cupón; Un subtotal de $10.000,01 permite aplicar el cupón\n# Cobertura: Campos de texto del código de cupón -> Un código de cupón vacío, con solo espacios o con caracteres especiales no aplica ningún descuento\n",
+      "resultado": {
+        "tipo": "feature",
+        "contenido": "# language: es\n# Supuesto: el subtotal es la suma de los productos del carrito antes de aplicar el descuento.\n# Supuesto: el cliente registrado tiene sesión iniciada al estar en el carrito.\n# Pregunta abierta: ¿qué ocurre si el cliente intenta aplicar un segundo cupón (se muestra un mensaje o reemplaza al primero)?\n# Pregunta abierta: ¿un cupón que vence el mismo día de la compra sigue siendo válido?\n# Pregunta abierta: ¿cuál es la longitud máxima del campo de código de cupón?\n# Pregunta abierta: ¿el código del cupón distingue mayúsculas de minúsculas?\n\n@regresion\nCaracterística: Aplicar cupón de descuento en el carrito\n  Como cliente registrado quiero aplicar un cupón de descuento en el carrito antes de pagar para obtener el descuento en mi compra\n\n  Antecedentes:\n    Dado que el cliente registrado tiene sesión iniciada\n    Y tiene productos en el carrito de compra\n\n  @smoke\n  Escenario: Un cupón válido y vigente descuenta el porcentaje indicado del subtotal\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces el total de la compra es $18.000\n\n  @negativo\n  Escenario: Un cupón vencido muestra el mensaje \"El cupón expiró\" y el total no cambia\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vencido con código \"VENCIDO5\" del 5% de descuento\n    Cuando aplica el cupón \"VENCIDO5\"\n    Entonces se muestra el mensaje \"El cupón expiró\"\n    Y el total de la compra sigue siendo $20.000\n\n  @negativo\n  Escenario: Un cupón inexistente muestra el mensaje \"Cupón inválido\"\n    Dado que el subtotal del carrito es $20.000\n    Cuando aplica el cupón \"NOEXISTE\"\n    Entonces se muestra el mensaje \"Cupón inválido\"\n\n  @negativo\n  Escenario: Solo se puede aplicar un cupón por compra\n    Dado que el subtotal del carrito es $20.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Y existe un cupón vigente con código \"OTRO20\" del 20% de descuento\n    Y ya aplicó el cupón \"VERANO10\" al carrito\n    Cuando aplica el cupón \"OTRO20\"\n    Entonces solo queda aplicado un cupón al carrito\n\n  @negativo\n  Escenario: Un subtotal menor a $10.000 muestra el mensaje \"Monto mínimo no alcanzado\"\n    Dado que el subtotal del carrito es $9.000\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se muestra el mensaje \"Monto mínimo no alcanzado\"\n\n  @negativo\n  Escenario: Un subtotal de $9.999,99 muestra el mensaje \"Monto mínimo no alcanzado\"\n    Dado que el subtotal del carrito es $9.999,99\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se muestra el mensaje \"Monto mínimo no alcanzado\"\n\n  Escenario: Un subtotal de $10.000,00 permite aplicar el cupón\n    Dado que el subtotal del carrito es $10.000,00\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces el total de la compra es $9.000\n\n  Escenario: Un subtotal de $10.000,01 permite aplicar el cupón\n    Dado que el subtotal del carrito es $10.000,01\n    Y existe un cupón vigente con código \"VERANO10\" del 10% de descuento\n    Cuando aplica el cupón \"VERANO10\"\n    Entonces se aplica el descuento del cupón al total de la compra\n\n  @negativo\n  Esquema del escenario: Un código de cupón vacío, con solo espacios o con caracteres especiales no aplica ningún descuento\n    Dado que el subtotal del carrito es $20.000\n    Cuando aplica el código <codigo>\n    Entonces no se aplica ningún descuento\n    Y el total de la compra sigue siendo $20.000\n\n    Ejemplos:\n      | codigo    |\n      | \"\"        |\n      | \"   \"     |\n      | \"%$#@!\"   |\n\n# Cobertura: Un cupón válido y vigente descuenta el porcentaje indicado del subtotal -> Un cupón válido y vigente descuenta el porcentaje indicado del subtotal\n# Cobertura: Un cupón vencido muestra \"El cupón expiró\" y el total no cambia -> Un cupón vencido muestra el mensaje \"El cupón expiró\" y el total no cambia\n# Cobertura: Un cupón que no existe muestra \"Cupón inválido\" -> Un cupón inexistente muestra el mensaje \"Cupón inválido\"\n# Cobertura: Solo se puede aplicar un cupón por compra -> Solo se puede aplicar un cupón por compra\n# Cobertura: Subtotal menor a $10.000 muestra \"Monto mínimo no alcanzado\" -> Un subtotal menor a $10.000 muestra el mensaje \"Monto mínimo no alcanzado\"; Un subtotal de $9.999,99 muestra el mensaje \"Monto mínimo no alcanzado\"; Un subtotal de $10.000,00 permite aplicar el cupón; Un subtotal de $10.000,01 permite aplicar el cupón\n# Cobertura: Campos de texto del código de cupón -> Un código de cupón vacío, con solo espacios o con caracteres especiales no aplica ningún descuento\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 61.9,
+      "llamadas": 2,
+      "tokens_entrada": 6194,
+      "tokens_salida": 9012
+    },
+    {
+      "caso": "G02",
+      "nombre": "Historia de una línea",
+      "tipo": "gherkin",
+      "repeticion": 1,
+      "tipo_obtenido": "preguntas",
+      "intentos": 0,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "1. ¿Quién genera el cupón de descuento? (por ejemplo: administrador, vendedor, sistema automático) ¿Hay otros roles que no deben poder hacerlo?\n2. ¿Qué tipo de descuento tiene el cupón: porcentaje, monto fijo u otro? ¿Cuál es el rango válido del valor (mínimo y máximo)?\n3. ¿Cuál es la fecha o período de validez del cupón? ¿Desde cuándo y hasta cuándo se puede usar?\n4. ¿El código del cupón se genera automáticamente o lo ingresa quien lo crea? Si lo genera el sistema, ¿qué formato debe tener?\n5. ¿El código debe ser único en todo el sistema? ¿Qué pasa si ya existe uno igual?\n6. ¿El cupón es de uso único, de uso limitado (cuántas veces) o de uso ilimitado?\n7. ¿El cupón tiene condiciones de aplicación, como monto mínimo de compra, productos o categorías específicas, o clientes determinados?\n8. ¿Qué datos son obligatorios al generar el cupón y qué debe mostrar el sistema cuando se genera correctamente?\n9. ¿Cuáles son los criterios de aceptación de la historia? Por favor, enumeralos con valores medibles.",
+      "resultado": {
+        "tipo": "preguntas",
+        "contenido": "1. ¿Quién genera el cupón de descuento? (por ejemplo: administrador, vendedor, sistema automático) ¿Hay otros roles que no deben poder hacerlo?\n2. ¿Qué tipo de descuento tiene el cupón: porcentaje, monto fijo u otro? ¿Cuál es el rango válido del valor (mínimo y máximo)?\n3. ¿Cuál es la fecha o período de validez del cupón? ¿Desde cuándo y hasta cuándo se puede usar?\n4. ¿El código del cupón se genera automáticamente o lo ingresa quien lo crea? Si lo genera el sistema, ¿qué formato debe tener?\n5. ¿El código debe ser único en todo el sistema? ¿Qué pasa si ya existe uno igual?\n6. ¿El cupón es de uso único, de uso limitado (cuántas veces) o de uso ilimitado?\n7. ¿El cupón tiene condiciones de aplicación, como monto mínimo de compra, productos o categorías específicas, o clientes determinados?\n8. ¿Qué datos son obligatorios al generar el cupón y qué debe mostrar el sistema cuando se genera correctamente?\n9. ¿Cuáles son los criterios de aceptación de la historia? Por favor, enumeralos con valores medibles."
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 5.5,
+      "llamadas": 1,
+      "tokens_entrada": 2268,
+      "tokens_salida": 747
+    },
+    {
+      "caso": "G03",
+      "nombre": "Criterio no medible",
+      "tipo": "gherkin",
+      "repeticion": 1,
+      "tipo_obtenido": "preguntas",
+      "intentos": 0,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "1. ¿Cuál es el tiempo máximo aceptable para que se muestren los resultados de la búsqueda (por ejemplo, \"menos de 2 segundos\")? ¿Medido desde qué momento hasta cuál?\n2. ¿Por qué campos se busca un producto: nombre, descripción, categoría, marca, código u otros?\n3. ¿Qué debe mostrar el sistema cuando la búsqueda no encuentra productos?\n4. ¿Qué pasa si el usuario busca sin escribir nada o solo con espacios?\n5. ¿La búsqueda distingue mayúsculas y minúsculas, y tolera errores de tipeo o acentos?\n6. ¿Hay un límite de caracteres para el texto de búsqueda? Si lo hay, ¿cuál es?",
+      "resultado": {
+        "tipo": "preguntas",
+        "contenido": "1. ¿Cuál es el tiempo máximo aceptable para que se muestren los resultados de la búsqueda (por ejemplo, \"menos de 2 segundos\")? ¿Medido desde qué momento hasta cuál?\n2. ¿Por qué campos se busca un producto: nombre, descripción, categoría, marca, código u otros?\n3. ¿Qué debe mostrar el sistema cuando la búsqueda no encuentra productos?\n4. ¿Qué pasa si el usuario busca sin escribir nada o solo con espacios?\n5. ¿La búsqueda distingue mayúsculas y minúsculas, y tolera errores de tipeo o acentos?\n6. ¿Hay un límite de caracteres para el texto de búsqueda? Si lo hay, ¿cuál es?"
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 3.1,
+      "llamadas": 1,
+      "tokens_entrada": 2286,
+      "tokens_salida": 507
+    },
+    {
+      "caso": "G04",
+      "nombre": "Permisos explícitos",
+      "tipo": "gherkin",
+      "repeticion": 1,
+      "tipo_obtenido": "feature",
+      "intentos": 1,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "# language: es\n# Supuesto: \"entre 1 y 20\" incluye los extremos: un código de 1 carácter y uno de 20 son válidos.\n# Supuesto: \"entero entre 1 y 100\" incluye los extremos: 1% y 100% son válidos.\n# Pregunta abierta: ¿Los códigos de cupón deben ser únicos?\n# Pregunta abierta: ¿Se admiten letras con tilde o la letra ñ en el código?\n@regresion\nCaracterística: Generación de cupones de descuento\n\n  @smoke\n  Escenario: Un administrador genera un cupón con código y descuento válidos\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón queda generado con el código \"PROMO20\" y un descuento de 20%\n\n  Esquema del escenario: Genera un cupón con un código válido de entre 1 y 20 caracteres\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código <codigo> y un descuento de 20%\n    Entonces el cupón queda generado con el código <codigo>\n\n    Ejemplos:\n      | codigo                 |\n      | \"A\"                    |\n      | \"A1\"                   |\n      | \"promo2024\"            |\n      | \"12345\"                |\n      | \"ABCDEFGHIJKLMNOPQRST\" |\n\n  @negativo\n  Esquema del escenario: Intenta generar un cupón con un código inválido\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código <codigo> y un descuento de 20%\n    Entonces el cupón no se genera\n\n    Ejemplos:\n      | codigo                  |\n      | \"\"                      |\n      | \"   \"                   |\n      | \"ABCDEFGHIJKLMNOPQRSTU\" |\n      | \"PROMO-20\"              |\n      | \"PROMO!\"                |\n\n  Esquema del escenario: Genera un cupón con un descuento entero válido entre 1 y 100\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO\" y un descuento de <descuento>%\n    Entonces el cupón queda generado con un descuento de <descuento>%\n\n    Ejemplos:\n      | descuento |\n      | 1         |\n      | 50        |\n      | 100       |\n\n  @negativo\n  Esquema del escenario: Intenta generar un cupón con un descuento inválido\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO\" y un descuento de <descuento>%\n    Entonces el cupón no se genera\n\n    Ejemplos:\n      | descuento |\n      | 0         |\n      | 101       |\n      | 10,5      |\n      | -5        |\n\n  @negativo\n  Escenario: Un usuario que no es administrador no puede generar un cupón\n    Dado que un usuario que no es administrador ha iniciado sesión\n    Cuando intenta generar un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón no se genera\n\n  @negativo\n  Escenario: Un usuario que no es administrador no puede acceder directamente a la generación de cupones\n    Dado que un usuario que no es administrador ha iniciado sesión\n    Cuando accede directamente a la pantalla de generación de cupones\n    Entonces el acceso a la generación de cupones es denegado\n\n  @negativo\n  Escenario: Un visitante sin sesión no puede generar un cupón\n    Dado que no ha iniciado sesión\n    Cuando intenta generar un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón no se genera\n\n# Cobertura: El cupón tiene un código de entre 1 y 20 letras o números -> Un administrador genera un cupón con código y descuento válidos; Genera un cupón con un código válido de entre 1 y 20 caracteres; Intenta generar un cupón con un código inválido\n# Cobertura: El descuento es un porcentaje entero entre 1 y 100 -> Un administrador genera un cupón con código y descuento válidos; Genera un cupón con un descuento entero válido entre 1 y 100; Intenta generar un cupón con un descuento inválido\n# Cobertura: Solo los administradores pueden generar cupones -> Un administrador genera un cupón con código y descuento válidos; Un usuario que no es administrador no puede generar un cupón; Un usuario que no es administrador no puede acceder directamente a la generación de cupones; Un visitante sin sesión no puede generar un cupón\n",
+      "resultado": {
+        "tipo": "feature",
+        "contenido": "# language: es\n# Supuesto: \"entre 1 y 20\" incluye los extremos: un código de 1 carácter y uno de 20 son válidos.\n# Supuesto: \"entero entre 1 y 100\" incluye los extremos: 1% y 100% son válidos.\n# Pregunta abierta: ¿Los códigos de cupón deben ser únicos?\n# Pregunta abierta: ¿Se admiten letras con tilde o la letra ñ en el código?\n@regresion\nCaracterística: Generación de cupones de descuento\n\n  @smoke\n  Escenario: Un administrador genera un cupón con código y descuento válidos\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón queda generado con el código \"PROMO20\" y un descuento de 20%\n\n  Esquema del escenario: Genera un cupón con un código válido de entre 1 y 20 caracteres\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código <codigo> y un descuento de 20%\n    Entonces el cupón queda generado con el código <codigo>\n\n    Ejemplos:\n      | codigo                 |\n      | \"A\"                    |\n      | \"A1\"                   |\n      | \"promo2024\"            |\n      | \"12345\"                |\n      | \"ABCDEFGHIJKLMNOPQRST\" |\n\n  @negativo\n  Esquema del escenario: Intenta generar un cupón con un código inválido\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código <codigo> y un descuento de 20%\n    Entonces el cupón no se genera\n\n    Ejemplos:\n      | codigo                  |\n      | \"\"                      |\n      | \"   \"                   |\n      | \"ABCDEFGHIJKLMNOPQRSTU\" |\n      | \"PROMO-20\"              |\n      | \"PROMO!\"                |\n\n  Esquema del escenario: Genera un cupón con un descuento entero válido entre 1 y 100\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO\" y un descuento de <descuento>%\n    Entonces el cupón queda generado con un descuento de <descuento>%\n\n    Ejemplos:\n      | descuento |\n      | 1         |\n      | 50        |\n      | 100       |\n\n  @negativo\n  Esquema del escenario: Intenta generar un cupón con un descuento inválido\n    Dado que el administrador ha iniciado sesión\n    Cuando genera un cupón con el código \"PROMO\" y un descuento de <descuento>%\n    Entonces el cupón no se genera\n\n    Ejemplos:\n      | descuento |\n      | 0         |\n      | 101       |\n      | 10,5      |\n      | -5        |\n\n  @negativo\n  Escenario: Un usuario que no es administrador no puede generar un cupón\n    Dado que un usuario que no es administrador ha iniciado sesión\n    Cuando intenta generar un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón no se genera\n\n  @negativo\n  Escenario: Un usuario que no es administrador no puede acceder directamente a la generación de cupones\n    Dado que un usuario que no es administrador ha iniciado sesión\n    Cuando accede directamente a la pantalla de generación de cupones\n    Entonces el acceso a la generación de cupones es denegado\n\n  @negativo\n  Escenario: Un visitante sin sesión no puede generar un cupón\n    Dado que no ha iniciado sesión\n    Cuando intenta generar un cupón con el código \"PROMO20\" y un descuento de 20%\n    Entonces el cupón no se genera\n\n# Cobertura: El cupón tiene un código de entre 1 y 20 letras o números -> Un administrador genera un cupón con código y descuento válidos; Genera un cupón con un código válido de entre 1 y 20 caracteres; Intenta generar un cupón con un código inválido\n# Cobertura: El descuento es un porcentaje entero entre 1 y 100 -> Un administrador genera un cupón con código y descuento válidos; Genera un cupón con un descuento entero válido entre 1 y 100; Intenta generar un cupón con un descuento inválido\n# Cobertura: Solo los administradores pueden generar cupones -> Un administrador genera un cupón con código y descuento válidos; Un usuario que no es administrador no puede generar un cupón; Un usuario que no es administrador no puede acceder directamente a la generación de cupones; Un visitante sin sesión no puede generar un cupón\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 54.8,
+      "llamadas": 2,
+      "tokens_entrada": 5428,
+      "tokens_salida": 7738
+    },
+    {
+      "caso": "G05",
+      "nombre": "Recuperar contraseña (sin roles)",
+      "tipo": "gherkin",
+      "repeticion": 1,
+      "tipo_obtenido": "feature",
+      "intentos": 2,
+      "reglas_intento_1": [
+        "R22",
+        "R23"
+      ],
+      "graves_intento_1": 3,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "# language: es\n# Supuesto: el plazo de 24 horas se cuenta desde el momento en que se envía el enlace de recuperación.\n# Supuesto: un enlace vencido no permite cambiar la contraseña.\n# Pregunta abierta: ¿cuál es la longitud máxima de la nueva contraseña?\n# Pregunta abierta: ¿cómo responde el sistema ante un email con formato inválido o con caracteres especiales?\n# Pregunta abierta: ¿cómo responde el sistema ante una nueva contraseña con caracteres especiales?\n\n@regresion\nCaracterística: Recuperación de contraseña\n\n  @smoke\n  Escenario: Envía un enlace de recuperación al ingresar un email registrado\n    Dado que el email \"usuario@ejemplo.com\" está registrado\n    Cuando solicita recuperar la contraseña con el email \"usuario@ejemplo.com\"\n    Entonces se envía un enlace de recuperación a \"usuario@ejemplo.com\"\n\n  @smoke\n  Escenario: Restablece la contraseña con un enlace vigente y una nueva contraseña válida\n    Dado que recibió un enlace de recuperación hace menos de 24 horas\n    Cuando define como nueva contraseña \"Clave1234\" usando ese enlace\n    Entonces la contraseña se actualiza\n    Y puede ingresar a su cuenta con la nueva contraseña\n\n  Esquema del escenario: Valida el límite de 24 horas de vigencia del enlace de recuperación\n    Dado que recibió un enlace de recuperación\n    Cuando usa el enlace <momento> después de recibirlo\n    Entonces la contraseña <resultado>\n\n    Ejemplos: Enlace vigente\n      | momento               | resultado     |\n      | 23 horas y 59 minutos | se actualiza  |\n\n    @negativo\n    Ejemplos: Enlace vencido\n      | momento               | resultado        |\n      | 24 horas              | no se actualiza  |\n      | 24 horas y 1 minuto   | no se actualiza  |\n\n  Esquema del escenario: Valida el mínimo de 8 caracteres de la nueva contraseña\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña una cadena de <longitud> caracteres\n    Entonces la contraseña <resultado>\n\n    Ejemplos: Longitud válida\n      | longitud | resultado     |\n      | 8        | se actualiza  |\n      | 9        | se actualiza  |\n\n    @negativo\n    Ejemplos: Longitud inválida\n      | longitud | resultado        |\n      | 7        | no se actualiza  |\n\n  @negativo\n  Escenario: No envía enlace cuando el campo de email está vacío\n    Cuando solicita recuperar la contraseña con el email vacío\n    Entonces no se envía ningún enlace de recuperación\n\n  @negativo\n  Escenario: No envía enlace cuando el campo de email tiene solo espacios\n    Cuando solicita recuperar la contraseña con el email \"   \"\n    Entonces no se envía ningún enlace de recuperación\n\n  @negativo\n  Escenario: No cambia la contraseña cuando el campo de nueva contraseña está vacío\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña un valor vacío usando ese enlace\n    Entonces la contraseña no se actualiza\n\n  @negativo\n  Escenario: No cambia la contraseña cuando el campo de nueva contraseña tiene solo espacios\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña \"        \" usando ese enlace\n    Entonces la contraseña no se actualiza\n\n  @negativo\n  Escenario: Muestra el mismo mensaje cuando el email no está registrado\n    Dado que el email \"noregistrado@ejemplo.com\" no está registrado\n    Cuando solicita recuperar la contraseña con el email \"noregistrado@ejemplo.com\"\n    Entonces muestra el mismo mensaje que cuando el email está registrado\n\n# Cobertura: Al ingresar un email registrado, se envía un enlace de recuperación. -> Envía un enlace de recuperación al ingresar un email registrado; No envía enlace cuando el campo de email está vacío; No envía enlace cuando el campo de email tiene solo espacios\n# Cobertura: El enlace vence a las 24 horas. -> Valida el límite de 24 horas de vigencia del enlace de recuperación\n# Cobertura: La nueva contraseña debe tener al menos 8 caracteres. -> Valida el mínimo de 8 caracteres de la nueva contraseña; No cambia la contraseña cuando el campo de nueva contraseña está vacío; No cambia la contraseña cuando el campo de nueva contraseña tiene solo espacios; Restablece la contraseña con un enlace vigente y una nueva contraseña válida\n# Cobertura: Si el email no está registrado, se muestra el mismo mensaje que si lo estuviera. -> Muestra el mismo mensaje cuando el email no está registrado\n",
+      "resultado": {
+        "tipo": "feature",
+        "contenido": "# language: es\n# Supuesto: el plazo de 24 horas se cuenta desde el momento en que se envía el enlace de recuperación.\n# Supuesto: un enlace vencido no permite cambiar la contraseña.\n# Pregunta abierta: ¿cuál es la longitud máxima de la nueva contraseña?\n# Pregunta abierta: ¿cómo responde el sistema ante un email con formato inválido o con caracteres especiales?\n# Pregunta abierta: ¿cómo responde el sistema ante una nueva contraseña con caracteres especiales?\n\n@regresion\nCaracterística: Recuperación de contraseña\n\n  @smoke\n  Escenario: Envía un enlace de recuperación al ingresar un email registrado\n    Dado que el email \"usuario@ejemplo.com\" está registrado\n    Cuando solicita recuperar la contraseña con el email \"usuario@ejemplo.com\"\n    Entonces se envía un enlace de recuperación a \"usuario@ejemplo.com\"\n\n  @smoke\n  Escenario: Restablece la contraseña con un enlace vigente y una nueva contraseña válida\n    Dado que recibió un enlace de recuperación hace menos de 24 horas\n    Cuando define como nueva contraseña \"Clave1234\" usando ese enlace\n    Entonces la contraseña se actualiza\n    Y puede ingresar a su cuenta con la nueva contraseña\n\n  Esquema del escenario: Valida el límite de 24 horas de vigencia del enlace de recuperación\n    Dado que recibió un enlace de recuperación\n    Cuando usa el enlace <momento> después de recibirlo\n    Entonces la contraseña <resultado>\n\n    Ejemplos: Enlace vigente\n      | momento               | resultado     |\n      | 23 horas y 59 minutos | se actualiza  |\n\n    @negativo\n    Ejemplos: Enlace vencido\n      | momento               | resultado        |\n      | 24 horas              | no se actualiza  |\n      | 24 horas y 1 minuto   | no se actualiza  |\n\n  Esquema del escenario: Valida el mínimo de 8 caracteres de la nueva contraseña\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña una cadena de <longitud> caracteres\n    Entonces la contraseña <resultado>\n\n    Ejemplos: Longitud válida\n      | longitud | resultado     |\n      | 8        | se actualiza  |\n      | 9        | se actualiza  |\n\n    @negativo\n    Ejemplos: Longitud inválida\n      | longitud | resultado        |\n      | 7        | no se actualiza  |\n\n  @negativo\n  Escenario: No envía enlace cuando el campo de email está vacío\n    Cuando solicita recuperar la contraseña con el email vacío\n    Entonces no se envía ningún enlace de recuperación\n\n  @negativo\n  Escenario: No envía enlace cuando el campo de email tiene solo espacios\n    Cuando solicita recuperar la contraseña con el email \"   \"\n    Entonces no se envía ningún enlace de recuperación\n\n  @negativo\n  Escenario: No cambia la contraseña cuando el campo de nueva contraseña está vacío\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña un valor vacío usando ese enlace\n    Entonces la contraseña no se actualiza\n\n  @negativo\n  Escenario: No cambia la contraseña cuando el campo de nueva contraseña tiene solo espacios\n    Dado que recibió un enlace de recuperación vigente\n    Cuando define como nueva contraseña \"        \" usando ese enlace\n    Entonces la contraseña no se actualiza\n\n  @negativo\n  Escenario: Muestra el mismo mensaje cuando el email no está registrado\n    Dado que el email \"noregistrado@ejemplo.com\" no está registrado\n    Cuando solicita recuperar la contraseña con el email \"noregistrado@ejemplo.com\"\n    Entonces muestra el mismo mensaje que cuando el email está registrado\n\n# Cobertura: Al ingresar un email registrado, se envía un enlace de recuperación. -> Envía un enlace de recuperación al ingresar un email registrado; No envía enlace cuando el campo de email está vacío; No envía enlace cuando el campo de email tiene solo espacios\n# Cobertura: El enlace vence a las 24 horas. -> Valida el límite de 24 horas de vigencia del enlace de recuperación\n# Cobertura: La nueva contraseña debe tener al menos 8 caracteres. -> Valida el mínimo de 8 caracteres de la nueva contraseña; No cambia la contraseña cuando el campo de nueva contraseña está vacío; No cambia la contraseña cuando el campo de nueva contraseña tiene solo espacios; Restablece la contraseña con un enlace vigente y una nueva contraseña válida\n# Cobertura: Si el email no está registrado, se muestra el mismo mensaje que si lo estuviera. -> Muestra el mismo mensaje cuando el email no está registrado\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": [
+              {
+                "regla": "R22",
+                "gravedad": "alta",
+                "detalle": "Línea 27: el paso \"Entonces <resultado>\" es solo un parámetro del Esquema \"Valida el límite de 24 horas de vigencia del enlace de recuperación\". Debe describir el comportamiento esperado."
+              },
+              {
+                "regla": "R22",
+                "gravedad": "alta",
+                "detalle": "Línea 42: el paso \"Entonces <resultado>\" es solo un parámetro del Esquema \"Valida el mínimo de 8 caracteres de la nueva contraseña\". Debe describir el comportamiento esperado."
+              },
+              {
+                "regla": "R23",
+                "gravedad": "alta",
+                "detalle": "Línea 3: el supuesto \"un enlace vencido o inválido no permite cambiar la contraseña\" agrega el concepto de enlace inválido, que la historia no menciona. La historia solo habla de enlaces que vencen a las 24 horas. Además, el escenario de la línea 54 (\"Rechaza un enlace de recuperación inválido\") prueba ese comportamiento inventado."
+              }
+            ]
+          },
+          {
+            "intento": 2,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 122.9,
+      "llamadas": 4,
+      "tokens_entrada": 13920,
+      "tokens_salida": 14620
+    },
+    {
+      "caso": "R01",
+      "nombre": "Cupón con log 500",
+      "tipo": "reporte",
+      "repeticion": 1,
+      "tipo_obtenido": "reporte",
+      "intentos": 1,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "**Título:** [Carrito] Aplicar cupón VERANO10 – total no cambia y muestra error\n\n**Entorno:** [Completar: ambiente], [Completar: navegador y versión], [Completar: sistema operativo], [Completar: dispositivo], [Completar: usuario de prueba]\n\n**Precondiciones:** [Completar: estado del carrito antes de la prueba (productos y total) y usuario con sesión iniciada]. El cupón VERANO10 debe existir y estar vigente. [Completar: confirmar]\n\n**Pasos para reproducir:**\n1. Ir al carrito con productos agregados.\n2. Ingresar el cupón VERANO10 en el campo de cupón.\n3. Aplicar el cupón.\n4. Observar el total del carrito y el mensaje que aparece.\n\n**Resultado esperado:** El cupón VERANO10 se aplica, el total del carrito se reduce según el descuento del cupón y no aparece ningún mensaje de error. [Completar: monto o porcentaje de descuento esperado]\n\n**Resultado actual:** El total del carrito no cambia y aparece un mensaje en rojo. [Completar: texto exacto del mensaje en rojo]. En la consola, la llamada `POST /api/carrito/cupon` responde 500 con el error: `TypeError: Cannot read properties of undefined (reading 'descuento')`.\n\n**Severidad:** Alta – afecta una funcionalidad importante (aplicar descuentos) y el usuario no tiene una alternativa sencilla para obtener el beneficio.\n\n**Frecuencia:** [Completar: frecuencia]\n\n**Evidencia:**\n- Log de consola: `POST /api/carrito/cupon 500 - TypeError: Cannot read properties of undefined (reading 'descuento')`\n- [Completar: adjuntar captura del carrito con el total sin cambios y el mensaje en rojo]\n- [Completar: adjuntar captura o exportación completa de la consola y de la pestaña de red]\n\n**Notas:** El error indica que el backend intenta leer la propiedad `descuento` de un valor `undefined`. Esto sugiere que la búsqueda del cupón VERANO10 no devuelve un objeto válido (por ejemplo, por no encontrarlo o por un problema en su estructura de datos) y el código accede a sus propiedades sin validar antes. Es una hipótesis que debe confirmarse con el equipo de desarrollo.\n\n**Casos de regresión:**\nEscenario: Aplicar un cupón válido en el carrito\n  Dado que el usuario tiene productos en el carrito\n  Cuando aplica el cupón VERANO10\n  Entonces el total del carrito se reduce según el descuento del cupón\n  Y no se muestra ningún mensaje de error\n  Y la llamada a \"/api/carrito/cupon\" responde con código 200\n\nEscenario: Aplicar un cupón inexistente en el carrito\n  Dado que el usuario tiene productos en el carrito\n  Cuando aplica un cupón que no existe\n  Entonces el total del carrito no cambia\n  Y se muestra un mensaje de error controlado, sin respuesta 500\n",
+      "resultado": {
+        "tipo": "reporte",
+        "contenido": "**Título:** [Carrito] Aplicar cupón VERANO10 – total no cambia y muestra error\n\n**Entorno:** [Completar: ambiente], [Completar: navegador y versión], [Completar: sistema operativo], [Completar: dispositivo], [Completar: usuario de prueba]\n\n**Precondiciones:** [Completar: estado del carrito antes de la prueba (productos y total) y usuario con sesión iniciada]. El cupón VERANO10 debe existir y estar vigente. [Completar: confirmar]\n\n**Pasos para reproducir:**\n1. Ir al carrito con productos agregados.\n2. Ingresar el cupón VERANO10 en el campo de cupón.\n3. Aplicar el cupón.\n4. Observar el total del carrito y el mensaje que aparece.\n\n**Resultado esperado:** El cupón VERANO10 se aplica, el total del carrito se reduce según el descuento del cupón y no aparece ningún mensaje de error. [Completar: monto o porcentaje de descuento esperado]\n\n**Resultado actual:** El total del carrito no cambia y aparece un mensaje en rojo. [Completar: texto exacto del mensaje en rojo]. En la consola, la llamada `POST /api/carrito/cupon` responde 500 con el error: `TypeError: Cannot read properties of undefined (reading 'descuento')`.\n\n**Severidad:** Alta – afecta una funcionalidad importante (aplicar descuentos) y el usuario no tiene una alternativa sencilla para obtener el beneficio.\n\n**Frecuencia:** [Completar: frecuencia]\n\n**Evidencia:**\n- Log de consola: `POST /api/carrito/cupon 500 - TypeError: Cannot read properties of undefined (reading 'descuento')`\n- [Completar: adjuntar captura del carrito con el total sin cambios y el mensaje en rojo]\n- [Completar: adjuntar captura o exportación completa de la consola y de la pestaña de red]\n\n**Notas:** El error indica que el backend intenta leer la propiedad `descuento` de un valor `undefined`. Esto sugiere que la búsqueda del cupón VERANO10 no devuelve un objeto válido (por ejemplo, por no encontrarlo o por un problema en su estructura de datos) y el código accede a sus propiedades sin validar antes. Es una hipótesis que debe confirmarse con el equipo de desarrollo.\n\n**Casos de regresión:**\nEscenario: Aplicar un cupón válido en el carrito\n  Dado que el usuario tiene productos en el carrito\n  Cuando aplica el cupón VERANO10\n  Entonces el total del carrito se reduce según el descuento del cupón\n  Y no se muestra ningún mensaje de error\n  Y la llamada a \"/api/carrito/cupon\" responde con código 200\n\nEscenario: Aplicar un cupón inexistente en el carrito\n  Dado que el usuario tiene productos en el carrito\n  Cuando aplica un cupón que no existe\n  Entonces el total del carrito no cambia\n  Y se muestra un mensaje de error controlado, sin respuesta 500\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 37.9,
+      "llamadas": 2,
+      "tokens_entrada": 3463,
+      "tokens_salida": 3408
+    },
+    {
+      "caso": "R02",
+      "nombre": "Bug sin datos esenciales",
+      "tipo": "reporte",
+      "repeticion": 1,
+      "tipo_obtenido": "preguntas",
+      "intentos": 0,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "1. ¿Qué pasa exactamente al intentar iniciar sesión? (por ejemplo, mensaje de error en pantalla, la página se queda cargando, vuelve al formulario sin mensaje, otro comportamiento).\n2. ¿Qué debería pasar al iniciar sesión correctamente? (por ejemplo, ingresar al panel principal o a una pantalla concreta).\n3. ¿Qué pasos hacés para llegar al error? Indicá desde dónde empezás, qué datos ingresás y qué botón o acción usás.",
+      "resultado": {
+        "tipo": "preguntas",
+        "contenido": "1. ¿Qué pasa exactamente al intentar iniciar sesión? (por ejemplo, mensaje de error en pantalla, la página se queda cargando, vuelve al formulario sin mensaje, otro comportamiento).\n2. ¿Qué debería pasar al iniciar sesión correctamente? (por ejemplo, ingresar al panel principal o a una pantalla concreta).\n3. ¿Qué pasos hacés para llegar al error? Indicá desde dónde empezás, qué datos ingresás y qué botón o acción usás."
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 2.6,
+      "llamadas": 1,
+      "tokens_entrada": 1551,
+      "tokens_salida": 328
+    },
+    {
+      "caso": "R03",
+      "nombre": "Bug visual sin entorno",
+      "tipo": "reporte",
+      "repeticion": 1,
+      "tipo_obtenido": "reporte",
+      "intentos": 1,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "**Título:** [Checkout] Botón \"Confirmar compra\" muestra texto cortado como \"Confirmar comp\"\n**Entorno:** [Completar: ambiente], [Completar: navegador y versión], [Completar: sistema operativo], [Completar: dispositivo], [Completar: usuario de prueba]\n**Precondiciones:** [Completar: precondiciones para llegar a la pantalla de checkout, por ejemplo productos en el carrito]\n**Pasos para reproducir:**\n1. Ingresar a la pantalla de checkout.\n2. Observar el botón \"Confirmar compra\".\n**Resultado esperado:** El botón muestra el texto completo \"Confirmar compra\".\n**Resultado actual:** El texto del botón aparece cortado y se lee \"Confirmar comp\". Al hacer clic, la compra se confirma igual.\n**Severidad:** Baja – problema visual o de texto; la funcionalidad de compra no se ve afectada.\n**Frecuencia:** [Completar: frecuencia]\n**Evidencia:** [Completar: adjuntar captura de pantalla del botón \"Confirmar compra\" mostrando el texto cortado]\n**Casos de regresión:**\nEscenario: El botón de confirmación muestra el texto completo\n  Dado que estoy en la pantalla de checkout con productos en el carrito\n  Cuando observo el botón \"Confirmar compra\"\n  Entonces el botón muestra el texto completo \"Confirmar compra\" sin cortes\n\nEscenario: Confirmar la compra sigue funcionando tras el ajuste visual\n  Dado que estoy en la pantalla de checkout con productos en el carrito\n  Cuando hago clic en el botón \"Confirmar compra\"\n  Entonces la compra se confirma correctamente\n",
+      "resultado": {
+        "tipo": "reporte",
+        "contenido": "**Título:** [Checkout] Botón \"Confirmar compra\" muestra texto cortado como \"Confirmar comp\"\n**Entorno:** [Completar: ambiente], [Completar: navegador y versión], [Completar: sistema operativo], [Completar: dispositivo], [Completar: usuario de prueba]\n**Precondiciones:** [Completar: precondiciones para llegar a la pantalla de checkout, por ejemplo productos en el carrito]\n**Pasos para reproducir:**\n1. Ingresar a la pantalla de checkout.\n2. Observar el botón \"Confirmar compra\".\n**Resultado esperado:** El botón muestra el texto completo \"Confirmar compra\".\n**Resultado actual:** El texto del botón aparece cortado y se lee \"Confirmar comp\". Al hacer clic, la compra se confirma igual.\n**Severidad:** Baja – problema visual o de texto; la funcionalidad de compra no se ve afectada.\n**Frecuencia:** [Completar: frecuencia]\n**Evidencia:** [Completar: adjuntar captura de pantalla del botón \"Confirmar compra\" mostrando el texto cortado]\n**Casos de regresión:**\nEscenario: El botón de confirmación muestra el texto completo\n  Dado que estoy en la pantalla de checkout con productos en el carrito\n  Cuando observo el botón \"Confirmar compra\"\n  Entonces el botón muestra el texto completo \"Confirmar compra\" sin cortes\n\nEscenario: Confirmar la compra sigue funcionando tras el ajuste visual\n  Dado que estoy en la pantalla de checkout con productos en el carrito\n  Cuando hago clic en el botón \"Confirmar compra\"\n  Entonces la compra se confirma correctamente\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 16.5,
+      "llamadas": 2,
+      "tokens_entrada": 2951,
+      "tokens_salida": 1835
+    },
+    {
+      "caso": "R04",
+      "nombre": "Bug intermitente con frecuencia",
+      "tipo": "reporte",
+      "repeticion": 1,
+      "tipo_obtenido": "reporte",
+      "intentos": 1,
+      "reglas_intento_1": [
+        "B11"
+      ],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "**Título:** [Pagos] Pagar con tarjeta – el cobro se duplica en algunos intentos\n**Entorno:** Ambiente: QA. Navegador y versión: [Completar: navegador y versión]. Sistema operativo: [Completar: sistema operativo]. Dispositivo: [Completar: dispositivo]. Usuario de prueba: [Completar: usuario de prueba]\n**Precondiciones:** Tener un producto disponible para agregar al carrito. Tener una tarjeta de prueba válida para el entorno de QA. [Completar: otras condiciones necesarias, si las hay]\n**Pasos para reproducir:**\n1. Agregar un producto al carrito.\n2. Ir a pagar.\n3. Pagar con tarjeta de prueba.\n**Resultado esperado:** El cobro se realiza una sola vez por la compra.\n**Resultado actual:** En algunos intentos el cobro se duplica.\n**Severidad:** Crítica – afecta el cobro de una funcionalidad principal, sin alternativa para el usuario y con impacto económico directo.\n**Frecuencia:** Intermitente (2 de 10 intentos)\n**Evidencia:** [Completar: adjuntar captura o video del pago con cobro duplicado]. [Completar: adjuntar registro del cobro duplicado en el panel de pagos o la respuesta de la pasarela, con número de orden]\n**Casos de regresión:**\nEscenario: Pago con tarjeta cobra una sola vez\n  Dado que el usuario tiene un producto agregado al carrito\n  Cuando el usuario va a pagar y paga con tarjeta de prueba\n  Entonces se registra un único cobro por la compra\n\nEscenario: Pago con tarjeta repetido no genera cobros adicionales\n  Dado que el usuario ya inició un pago con tarjeta de prueba para una compra\n  Cuando el pago se procesa más de una vez en el flujo de cobro\n  Entonces el sistema registra un único cobro para esa compra\n",
+      "resultado": {
+        "tipo": "reporte",
+        "contenido": "**Título:** [Pagos] Pagar con tarjeta – el cobro se duplica en algunos intentos\n**Entorno:** Ambiente: QA. Navegador y versión: [Completar: navegador y versión]. Sistema operativo: [Completar: sistema operativo]. Dispositivo: [Completar: dispositivo]. Usuario de prueba: [Completar: usuario de prueba]\n**Precondiciones:** Tener un producto disponible para agregar al carrito. Tener una tarjeta de prueba válida para el entorno de QA. [Completar: otras condiciones necesarias, si las hay]\n**Pasos para reproducir:**\n1. Agregar un producto al carrito.\n2. Ir a pagar.\n3. Pagar con tarjeta de prueba.\n**Resultado esperado:** El cobro se realiza una sola vez por la compra.\n**Resultado actual:** En algunos intentos el cobro se duplica.\n**Severidad:** Crítica – afecta el cobro de una funcionalidad principal, sin alternativa para el usuario y con impacto económico directo.\n**Frecuencia:** Intermitente (2 de 10 intentos)\n**Evidencia:** [Completar: adjuntar captura o video del pago con cobro duplicado]. [Completar: adjuntar registro del cobro duplicado en el panel de pagos o la respuesta de la pasarela, con número de orden]\n**Casos de regresión:**\nEscenario: Pago con tarjeta cobra una sola vez\n  Dado que el usuario tiene un producto agregado al carrito\n  Cuando el usuario va a pagar y paga con tarjeta de prueba\n  Entonces se registra un único cobro por la compra\n\nEscenario: Pago con tarjeta repetido no genera cobros adicionales\n  Dado que el usuario ya inició un pago con tarjeta de prueba para una compra\n  Cuando el pago se procesa más de una vez en el flujo de cobro\n  Entonces el sistema registra un único cobro para esa compra\n",
+        "problemas": [
+          {
+            "regla": "B11",
+            "gravedad": "baja",
+            "detalle": "La severidad está marcada como Crítica, pero la escala la reserva para problemas que bloquean una funcionalidad principal sin alternativa. El reporte describe un cobro duplicado en 2 de 10 intentos, sin indicar que el pago quede bloqueado. La justificación ('afecta el cobro... sin alternativa... impacto económico directo') no encaja con el criterio de bloqueo."
+          }
+        ],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": [
+              {
+                "regla": "B11",
+                "gravedad": "baja",
+                "detalle": "La severidad está marcada como Crítica, pero la escala la reserva para problemas que bloquean una funcionalidad principal sin alternativa. El reporte describe un cobro duplicado en 2 de 10 intentos, sin indicar que el pago quede bloqueado. La justificación ('afecta el cobro... sin alternativa... impacto económico directo') no encaja con el criterio de bloqueo."
+              }
+            ]
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 24.4,
+      "llamadas": 2,
+      "tokens_entrada": 3074,
+      "tokens_salida": 2709
+    },
+    {
+      "caso": "R05",
+      "nombre": "El QA sí aporta una captura",
+      "tipo": "reporte",
+      "repeticion": 1,
+      "tipo_obtenido": "reporte",
+      "intentos": 1,
+      "reglas_intento_1": [],
+      "graves_intento_1": 0,
+      "graves_finales": 0,
+      "validacion_final": [],
+      "b08_detectado": false,
+      "contenido": "**Título:** [Perfil] Foto mayor a 5 MB al guardar – página en blanco\n**Entorno:** [Completar: ambiente, navegador y versión, sistema operativo, dispositivo, usuario de prueba]\n**Precondiciones:** [Completar: precondiciones, por ejemplo sesión iniciada y acceso al formulario de perfil]\n**Pasos para reproducir:**\n1. Cargar en el perfil una foto de más de 5 MB.\n2. Guardar el perfil.\n**Resultado esperado:** La aplicación muestra un mensaje indicando que la foto es muy grande.\n**Resultado actual:** La página queda en blanco.\n**Severidad:** Media – afecta la validación de la foto de perfil, una funcionalidad secundaria, y el usuario puede continuar subiendo una imagen de menor tamaño.\n**Frecuencia:** [Completar: frecuencia]\n**Evidencia:** Captura de pantalla de la página en blanco aportada por el QA. [Completar: adjuntar la captura del navegador con la consola abierta, si está disponible]\n**Casos de regresión:**\nEscenario: Mensaje de error al guardar una foto de perfil mayor a 5 MB\n  Dado que el usuario está en el formulario de perfil\n  Cuando carga una foto de más de 5 MB y guarda el perfil\n  Entonces ve un mensaje que indica que la foto es muy grande\n  Y la página no queda en blanco\n",
+      "resultado": {
+        "tipo": "reporte",
+        "contenido": "**Título:** [Perfil] Foto mayor a 5 MB al guardar – página en blanco\n**Entorno:** [Completar: ambiente, navegador y versión, sistema operativo, dispositivo, usuario de prueba]\n**Precondiciones:** [Completar: precondiciones, por ejemplo sesión iniciada y acceso al formulario de perfil]\n**Pasos para reproducir:**\n1. Cargar en el perfil una foto de más de 5 MB.\n2. Guardar el perfil.\n**Resultado esperado:** La aplicación muestra un mensaje indicando que la foto es muy grande.\n**Resultado actual:** La página queda en blanco.\n**Severidad:** Media – afecta la validación de la foto de perfil, una funcionalidad secundaria, y el usuario puede continuar subiendo una imagen de menor tamaño.\n**Frecuencia:** [Completar: frecuencia]\n**Evidencia:** Captura de pantalla de la página en blanco aportada por el QA. [Completar: adjuntar la captura del navegador con la consola abierta, si está disponible]\n**Casos de regresión:**\nEscenario: Mensaje de error al guardar una foto de perfil mayor a 5 MB\n  Dado que el usuario está en el formulario de perfil\n  Cuando carga una foto de más de 5 MB y guarda el perfil\n  Entonces ve un mensaje que indica que la foto es muy grande\n  Y la página no queda en blanco\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": []
+          }
+        ]
+      },
+      "fallas": [],
+      "aprobado": true,
+      "segundos": 13.1,
+      "llamadas": 2,
+      "tokens_entrada": 2850,
+      "tokens_salida": 1791
+    }
+  ]
+}

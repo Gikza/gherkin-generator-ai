@@ -168,6 +168,18 @@ El ciclo de revisión corrigió todos los problemas graves del primer intento: e
 - **La evaluación también se testea.** Marcó como inventado "iOS" porque lo encontró dentro de "pasos prev*ios*". Corregí el chequeo para que busque palabras completas y agregué `--recalificar`, que vuelve a calificar una corrida guardada sin llamar a la IA.
 - **Choque entre reglas (resuelto).** En "recuperar contraseña", la regla que pide probar la longitud máxima de los campos llevó a la IA a inventar un máximo de 128 caracteres que la historia no define, y el revisor lo marcó como requisito inventado (R23). Como con los permisos, definí un criterio común (`CRITERIO_LONGITUD`): el máximo se prueba solo si la historia lo define; si no, queda como `# Pregunta abierta`. En la verificación ([detalle](evaluacion/resultados/2026-10-15_1901.md)), las dos ejecuciones de ese caso dejaron la pregunta abierta en lugar de inventar el límite. Una de ellas falló por otro motivo: supuestos que agregan comportamiento nuevo (por ejemplo, "el enlace es de un solo uso"), que el revisor marcó como requisitos inventados. Lo resolví con el mismo patrón (`CRITERIO_SUPUESTOS`): un supuesto solo aclara algo que la historia ya menciona; si agrega comportamiento, queda como `# Pregunta abierta` y no se prueba. Verificación ([detalle](evaluacion/resultados/2026-10-15_1912.md)): 4 de 4, con "recuperar contraseña" y "cupón" dos veces cada uno.
 
+**Después de los criterios compartidos** (longitud y supuestos, [detalle](evaluacion/resultados/2026-10-15_1921.md)), mismos 10 casos:
+
+| Métrica | Primera corrida | Con los criterios |
+|---|---|---|
+| Casos aprobados | 10 de 10 | 10 de 10 |
+| Con problemas graves en el primer intento | 3 de 7 | **1 de 7** |
+| Intentos promedio | 1,7 | **1,1** |
+| Tiempo promedio | 44 s | **34 s** |
+| Tokens (entrada / salida) | 62.833 / 61.176 | **43.985 / 42.695** |
+
+Al darle a la IA reglas que no se contradicen, se equivoca menos en el primer intento, necesita menos correcciones y cuesta un 30 % menos. Es una sola corrida de cada versión: la tendencia es clara, pero para afirmarlo con más seguridad conviene repetirla.
+
 ## Integración continua
 
 En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwright en la nube. Si algún test de interfaz falla, guarda el reporte de Playwright para revisarlo.
