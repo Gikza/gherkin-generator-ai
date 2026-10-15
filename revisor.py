@@ -5,6 +5,8 @@ import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import uso
+
 from prompt import CRITERIO_PERMISOS
 
 load_dotenv()
@@ -86,5 +88,6 @@ def revisar(entrada, salida, prompt=REVISOR_PROMPT, tabla=GRAVEDAD_POR_REGLA,
             "content": f"{etiquetas[0]}:\n{entrada}\n\n{etiquetas[1]}:\n{salida}",
         }],
     )
+    uso.registrar(respuesta)
     texto = "".join(b.text for b in respuesta.content if b.type == "text")
     return aplicar_gravedad(extraer_json(texto).get("problemas", []), tabla)

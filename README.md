@@ -85,6 +85,8 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 | `prompt.py` | Instrucciones del generador (checklist como *system prompt*) |
 | `revisor.py` | Revisor IA y tabla de gravedad |
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
+| `evaluar.py` | Evaluación con la IA real sobre el set de casos de `evaluacion/` |
+| `uso.py` | Cuenta las llamadas y los tokens de cada generación |
 | `simulador.py` | Respuestas fijas de la IA para los tests de interfaz |
 | `e2e/` | Tests end-to-end con Playwright (TypeScript) |
 | `tests/` | Tests unitarios (pytest) |
@@ -110,17 +112,42 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-62 tests:
+70 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
 - **Prompts (3):** generador y revisor comparten el mismo criterio de permisos, y la severidad del reporte es solo una sugerencia.
 - **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
+- **Evaluación (8):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
 - **Ciclo de revisión (7):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones, se queda con la última versión si la IA responde con preguntas y le pasa al validador lo que contó el QA.
 
 ```bash
 pytest -v
 ```
+
+## Evaluación con la IA real
+
+Los tests no llaman a la IA. Para medir la calidad de lo que genera de verdad, hay un **set fijo de 10 casos** (`evaluacion/casos.json`): historias completas, historias ambiguas, bugs con log, bugs sin datos esenciales, bugs sin entorno y bugs donde el QA sí aporta evidencia. Cada caso define qué tipo de resultado se espera y qué textos no deberían aparecer porque serían inventados.
+
+```bash
+python evaluar.py                    # todos los casos, una vez
+python evaluar.py --repeticiones 3   # para medir la variabilidad
+python evaluar.py --casos G01,R01    # solo algunos casos
+```
+
+El script mide, por ejecución y en total: casos aprobados, problemas graves en el primer intento y al final, datos inventados detectados por código (B08), intentos, tiempo, llamadas a la API y tokens. Guarda el detalle en JSON y un resumen en Markdown en `evaluacion/resultados/`. No corre en GitHub Actions porque gasta créditos de la API.
+
+**Primera evaluación** (15/10/2026, `claude-haiku-5-5`, 10 casos × 1 ejecución, [detalle](evaluacion/resultados/2026-10-15_1801.md)):
+
+| Métrica | Resultado |
+|---|---|
+| Casos aprobados | 10 de 10 |
+| Historias y bugs ambiguos que terminaron en preguntas, sin inventar | 3 de 3 |
+| Resultados con problemas graves en el primer intento | 3 de 7 |
+| Resultados con problemas graves al final | 0 de 7 |
+| Intentos promedio / tiempo promedio | 1,7 / 44 s |
+
+El ciclo de revisión corrigió todos los problemas graves del primer intento: entre ellos, un requisito inventado en una historia (R23) y datos inventados en un reporte (B10). Es una sola ejecución por caso: el próximo paso es repetirla para medir la variabilidad.
 
 ## Integración continua
 

@@ -4,6 +4,7 @@ import os
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import uso
 from prompt import SYSTEM_PROMPT
 from revisor import revisar
 from validador import validar_texto
@@ -37,6 +38,7 @@ def llamar_generador(mensajes, system=SYSTEM_PROMPT, tipo="feature"):
         system=system,
         messages=mensajes,
     )
+    uso.registrar(respuesta)
     # La respuesta puede incluir bloques de razonamiento: nos quedamos con el texto.
     texto = "".join(b.text for b in respuesta.content if b.type == "text")
     return interpretar(texto, tipo)

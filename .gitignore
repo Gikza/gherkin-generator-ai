@@ -14,3 +14,6 @@ playwright-report/
 
 # Archivos que deja Claude (carrusel, etc.): no van al repo
 Claude outputs/
+
+# Pruebas de la evaluación con el simulador (MODO_PRUEBA=1): no van al repo
+evaluacion/resultados/*_simulador.*

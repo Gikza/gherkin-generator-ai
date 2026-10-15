@@ -1,0 +1,84 @@
+{
+  "descripcion": "Set fijo de casos para medir la calidad de la herramienta con la IA real. Cada caso dice qué tipo de resultado se espera y qué textos no deberían aparecer (datos inventados) o sí deberían aparecer.",
+  "casos": [
+    {
+      "id": "G01",
+      "tipo": "gherkin",
+      "nombre": "Cupón en el carrito (historia completa)",
+      "entrada": "Como cliente registrado de la tienda online quiero aplicar un cupón de descuento en el carrito antes de pagar para obtener el descuento en mi compra.\n\nCriterios de aceptación:\n1. Un cupón válido y vigente descuenta el porcentaje indicado del subtotal.\n2. Si el cupón está vencido, se muestra \"El cupón expiró\" y el total no cambia.\n3. Si el cupón no existe, se muestra \"Cupón inválido\".\n4. Solo se puede aplicar un cupón por compra.\n5. Si el subtotal es menor a $10.000, se muestra \"Monto mínimo no alcanzado\".",
+      "esperado": "feature",
+      "no_debe_contener": ["administrador"],
+      "debe_contener": ["El cupón expiró", "Cupón inválido", "Monto mínimo no alcanzado"]
+    },
+    {
+      "id": "G02",
+      "tipo": "gherkin",
+      "nombre": "Historia de una línea",
+      "entrada": "Generar cupón de descuento",
+      "esperado": "preguntas"
+    },
+    {
+      "id": "G03",
+      "tipo": "gherkin",
+      "nombre": "Criterio no medible",
+      "entrada": "Como usuario quiero buscar productos. La búsqueda debe ser rápida.",
+      "esperado": "preguntas"
+    },
+    {
+      "id": "G04",
+      "tipo": "gherkin",
+      "nombre": "Permisos explícitos",
+      "entrada": "Como administrador quiero generar cupones de descuento para promocionar productos.\nSolo los administradores pueden generar cupones.\n\nCriterios de aceptación:\n1. El cupón tiene un código de entre 1 y 20 letras o números.\n2. El descuento es un porcentaje entero entre 1 y 100.",
+      "esperado": "feature",
+      "debe_contener": ["sesión"]
+    },
+    {
+      "id": "G05",
+      "tipo": "gherkin",
+      "nombre": "Recuperar contraseña (sin roles)",
+      "entrada": "Como usuario registrado quiero recuperar mi contraseña para volver a ingresar a mi cuenta.\n\nCriterios de aceptación:\n1. Al ingresar un email registrado, se envía un enlace de recuperación.\n2. El enlace vence a las 24 horas.\n3. La nueva contraseña debe tener al menos 8 caracteres.\n4. Si el email no está registrado, se muestra el mismo mensaje que si lo estuviera.",
+      "esperado": "feature",
+      "no_debe_contener": ["administrador"]
+    },
+    {
+      "id": "R01",
+      "tipo": "reporte",
+      "nombre": "Cupón con log 500",
+      "descripcion": "Al aplicar el cupón VERANO10 en el carrito, el total no cambia y aparece un mensaje en rojo.",
+      "log": "POST /api/carrito/cupon 500 - TypeError: Cannot read properties of undefined (reading 'descuento')",
+      "esperado": "reporte",
+      "debe_contener": ["TypeError: Cannot read properties of undefined"]
+    },
+    {
+      "id": "R02",
+      "tipo": "reporte",
+      "nombre": "Bug sin datos esenciales",
+      "descripcion": "El login no anda.",
+      "esperado": "preguntas"
+    },
+    {
+      "id": "R03",
+      "tipo": "reporte",
+      "nombre": "Bug visual sin entorno",
+      "descripcion": "En la pantalla de checkout, el texto del botón \"Confirmar compra\" aparece cortado: se lee \"Confirmar comp\". Debería verse el texto completo. Al apretarlo, la compra se confirma igual.",
+      "esperado": "reporte",
+      "no_debe_contener": ["Chrome", "Firefox", "Safari", "Android", "iOS", "Windows"]
+    },
+    {
+      "id": "R04",
+      "tipo": "reporte",
+      "nombre": "Bug intermitente con frecuencia",
+      "descripcion": "Al pagar con tarjeta, a veces el cobro se duplica: pasó 2 de 10 intentos en QA. Debería cobrarse una sola vez. Pasos: agregar un producto al carrito, ir a pagar, pagar con tarjeta de prueba.",
+      "esperado": "reporte",
+      "debe_contener": ["2 de 10"]
+    },
+    {
+      "id": "R05",
+      "tipo": "reporte",
+      "nombre": "El QA sí aporta una captura",
+      "descripcion": "Al guardar el perfil con una foto mayor a 5 MB, la página queda en blanco. Debería mostrar un mensaje de que la foto es muy grande. Adjunto captura de la pantalla en blanco.",
+      "esperado": "reporte",
+      "debe_contener": ["captura"]
+    }
+  ]
+}
