@@ -3,20 +3,57 @@ import os
 
 import anthropic
 import streamlit as st
+from dotenv import load_dotenv
 
 from aclaraciones import armar_historia, hay_respuestas, separar_preguntas
+from demo import SinEjemploGrabado, ejemplos_de
 from reporte import armar_entrada
 from reporte_validador import validar_reporte
 from validador import validar_texto
 
-# En modo prueba (tests de Playwright) se usa el simulador en lugar de la IA real.
+load_dotenv()
+
+# Tres modos:
+#   - prueba: tests de Playwright, con el simulador (MODO_PRUEBA=1)
+#   - demo:   app publicada sin clave de la API: muestra resultados reales grabados (MODO_DEMO=1,
+#             o automáticamente si no hay ANTHROPIC_API_KEY)
+#   - real:   llama a la IA
+MODO_DEMO = os.environ.get("MODO_PRUEBA") != "1" and (
+    os.environ.get("MODO_DEMO") == "1" or not os.environ.get("ANTHROPIC_API_KEY")
+)
 if os.environ.get("MODO_PRUEBA") == "1":
     from simulador import generar_con_revision, generar_reporte_con_revision
+elif MODO_DEMO:
+    from demo import generar_con_revision, generar_reporte_con_revision
 else:
     from generador import generar_con_revision
     from reporte import generar_reporte_con_revision
 
 st.title("Generador de casos Gherkin y reportes de bugs")
+
+if MODO_DEMO:
+    st.info(
+        "**Modo demo.** Elegí un ejemplo para ver un resultado **real** de la IA, grabado durante "
+        "la evaluación del proyecto, con su validación automática y el historial de correcciones. "
+        "La demo no llama a la IA. [Ver el código en GitHub](https://github.com/Gikza/gherkin-generator-ai)"
+    )
+
+
+def selector_de_ejemplos(tipo, campos, clave):
+    """En modo demo, un menú que completa los cuadros de texto con un ejemplo grabado."""
+    ejemplos = ejemplos_de(tipo)
+    if not MODO_DEMO or not ejemplos:
+        return
+    por_nombre = {f"{e['id']} — {e['nombre']}": e for e in ejemplos}
+
+    def completar():
+        elegido = por_nombre.get(st.session_state[f"{clave}_ejemplo"])
+        if elegido:
+            for campo_ejemplo, campo_app in campos.items():
+                st.session_state[campo_app] = elegido.get(campo_ejemplo, "")
+
+    st.selectbox("Ejemplo", list(por_nombre), index=None, placeholder="Elegí un ejemplo…",
+                 key=f"{clave}_ejemplo", on_change=completar)
 
 
 def ejecutar(clave, funcion, texto):
@@ -42,6 +79,8 @@ def ejecutar(clave, funcion, texto):
         st.error(f"No se pudo generar. Error de la API: {error}")
     except KeyError:
         st.error("Falta CLAUDE_MODEL en el archivo .env.")
+    except SinEjemploGrabado as aviso:
+        st.warning(str(aviso))
     return False
 
 
@@ -113,7 +152,8 @@ pestana_gherkin, pestana_bug = st.tabs(["Casos Gherkin", "Reporte de bug"])
 # --- Casos Gherkin -----------------------------------------------------------
 with pestana_gherkin:
     st.write("Pegá una historia de usuario y obtené escenarios en Gherkin.")
-    historia = st.text_area("Historia de usuario", height=200)
+    selector_de_ejemplos("gherkin", {"historia": "historia"}, "gherkin")
+    historia = st.text_area("Historia de usuario", height=200, key="historia")
 
     if st.button("Generar"):
         if not historia.strip():
@@ -150,8 +190,9 @@ with pestana_gherkin:
 # --- Reporte de bug ----------------------------------------------------------
 with pestana_bug:
     st.write("Contá el bug con tus palabras. Si tenés un log o un error de consola, pegalo abajo.")
-    descripcion = st.text_area("Descripción del bug", height=200)
-    log = st.text_area("Log o error de consola (opcional)", height=120)
+    selector_de_ejemplos("reporte", {"descripcion": "descripcion", "log": "log"}, "bug")
+    descripcion = st.text_area("Descripción del bug", height=200, key="descripcion")
+    log = st.text_area("Log o error de consola (opcional)", height=120, key="log")
 
     if st.button("Generar reporte"):
         if not descripcion.strip():

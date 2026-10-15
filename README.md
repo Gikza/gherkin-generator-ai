@@ -87,12 +87,21 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 | `validador.py` | Reglas verificables con Python; también funciona por línea de comandos |
 | `evaluar.py` | Evaluación con la IA real sobre el set de casos de `evaluacion/` |
 | `uso.py` | Cuenta las llamadas y los tokens de cada generación |
+| `demo.py` | Modo demo: resultados reales grabados en `demo/ejemplos.json` |
 | `simulador.py` | Respuestas fijas de la IA para los tests de interfaz |
 | `e2e/` | Tests end-to-end con Playwright (TypeScript) |
 | `tests/` | Tests unitarios (pytest) |
 | `.github/workflows/` | Integración continua con GitHub Actions |
 | `ejemplos/` | Archivos `.feature` de referencia |
 | `pruebas_validador/` | Archivo roto a propósito para probar el validador |
+
+## Modo demo
+
+Si la app arranca sin clave de la API (por ejemplo, publicada en Streamlit Community Cloud), entra en **modo demo**: muestra resultados **reales** de la IA, grabados durante la evaluación, con su validación automática y su historial de correcciones. No llama a la IA, así que no gasta créditos. Los ejemplos se graban con:
+
+```bash
+python evaluar.py --guardar-demo
+```
 
 ## Cómo ejecutarlo
 
@@ -112,13 +121,14 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-70 tests:
+79 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
 - **Prompts (3):** generador y revisor comparten el mismo criterio de permisos, y la severidad del reporte es solo una sugerencia.
 - **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
-- **Evaluación (8):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
+- **Modo demo (7):** busca el resultado grabado de cada ejemplo, avisa si la entrada no es un ejemplo y guarda solo ejecuciones aprobadas.
+- **Evaluación (10):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
 - **Ciclo de revisión (7):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones, se queda con la última versión si la IA responde con preguntas y le pasa al validador lo que contó el QA.
 
 ```bash
@@ -147,7 +157,12 @@ El script mide, por ejecución y en total: casos aprobados, problemas graves en 
 | Resultados con problemas graves al final | 0 de 7 |
 | Intentos promedio / tiempo promedio | 1,7 / 44 s |
 
-El ciclo de revisión corrigió todos los problemas graves del primer intento: entre ellos, un requisito inventado en una historia (R23) y datos inventados en un reporte (B10). Es una sola ejecución por caso: el próximo paso es repetirla para medir la variabilidad.
+El ciclo de revisión corrigió todos los problemas graves del primer intento: entre ellos, un requisito inventado en una historia (R23) y datos inventados en un reporte (B10).
+
+**Segunda corrida** (mismo día y mismos casos, [detalle](evaluacion/resultados/2026-10-15_1821_recalificado.md)): **9 de 10**. Dejó dos aprendizajes:
+
+- **La evaluación también se testea.** Marcó como inventado "iOS" porque lo encontró dentro de "pasos prev*ios*". Corregí el chequeo para que busque palabras completas y agregué `--recalificar`, que vuelve a calificar una corrida guardada sin llamar a la IA.
+- **Choque entre reglas (pendiente).** En "recuperar contraseña", la regla que pide probar la longitud máxima de los campos llevó a la IA a inventar un máximo de 128 caracteres que la historia no define, y el revisor lo marcó como requisito inventado (R23). Es el mismo tipo de conflicto que hubo con los permisos.
 
 ## Integración continua
 

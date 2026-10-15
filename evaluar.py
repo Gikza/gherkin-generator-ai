@@ -8,6 +8,10 @@ Uso:
   python evaluar.py                      (todos los casos, 1 vez)
   python evaluar.py --repeticiones 3     (cada caso 3 veces, para medir variabilidad)
   python evaluar.py --casos G01,R01      (solo algunos casos)
+  python evaluar.py --guardar-demo       (además, guarda los aprobados como ejemplos de la demo)
+  python evaluar.py --recalificar evaluacion/resultados/<archivo>.json
+                                         (vuelve a calificar una corrida guardada con las reglas
+                                          actuales, sin llamar a la IA)
 
 Cuesta créditos de la API: cada ejecución hace varias llamadas.
 Con MODO_PRUEBA=1 usa el simulador (gratis), útil para probar el script.
@@ -15,6 +19,7 @@ Con MODO_PRUEBA=1 usa el simulador (gratis), útil para probar el script.
 import argparse
 import json
 import os
+import re
 import time
 from collections import Counter
 from datetime import datetime
@@ -28,6 +33,7 @@ from validador import validar_texto
 RAIZ = Path(__file__).resolve().parent
 CASOS = RAIZ / "evaluacion" / "casos.json"
 RESULTADOS = RAIZ / "evaluacion" / "resultados"
+EJEMPLOS_DEMO = RAIZ / "demo" / "ejemplos.json"
 
 
 def funciones_de_generacion():
@@ -50,6 +56,14 @@ def entrada_del_caso(caso):
 def tipo_obtenido(resultado):
     """'preguntas', 'feature' o 'reporte'."""
     return resultado["tipo"]
+
+
+def contiene_palabra(texto, buscado):
+    """Busca palabras o frases completas, sin distinguir mayúsculas.
+
+    Sin esto, "iOS" aparecía dentro de "pasos previos" (falso positivo de la evaluación).
+    """
+    return re.search(rf"(?<!\w){re.escape(buscado)}(?!\w)", texto, re.IGNORECASE) is not None
 
 
 def evaluar_resultado(caso, entrada, resultado):
@@ -95,12 +109,11 @@ def evaluar_resultado(caso, entrada, resultado):
     if metricas["validacion_final"]:
         fallas.append("Validación automática con fallas: " + ", ".join(metricas["validacion_final"]))
 
-    texto = contenido.lower()
     for prohibido in caso.get("no_debe_contener", []):
-        if prohibido.lower() in texto:
+        if contiene_palabra(contenido, prohibido):
             fallas.append(f'Contiene "{prohibido}", que la entrada no menciona')
     for obligatorio in caso.get("debe_contener", []):
-        if obligatorio.lower() not in texto:
+        if not contiene_palabra(contenido, obligatorio):
             fallas.append(f'No contiene "{obligatorio}"')
 
     return metricas, fallas
@@ -118,6 +131,7 @@ def ejecutar_caso(caso, generar, repeticion):
         metricas, fallas = evaluar_resultado(caso, entrada, resultado)
         registro.update(metricas)
         registro["contenido"] = resultado["contenido"]
+        registro["resultado"] = resultado  # completo, con historial: lo usa la demo
     except Exception as error:  # un error de la API no corta la evaluación entera
         fallas = [f"Error al generar: {type(error).__name__}: {error}"]
         registro["tipo_obtenido"] = "error"
@@ -126,6 +140,63 @@ def ejecutar_caso(caso, generar, repeticion):
     registro["segundos"] = round(time.monotonic() - inicio, 1)
     registro.update(uso.leer())
     return registro
+
+
+def ejemplos_para_demo(casos, ejecuciones, modelo):
+    """Arma los ejemplos de la demo con la primera ejecución aprobada de cada caso."""
+    por_id = {c["id"]: c for c in casos}
+    ejemplos, vistos = [], set()
+    for e in ejecuciones:
+        if not e["aprobado"] or e["caso"] in vistos or "resultado" not in e:
+            continue
+        vistos.add(e["caso"])
+        caso = por_id[e["caso"]]
+        ejemplo = {"id": caso["id"], "tipo": caso["tipo"], "nombre": caso["nombre"],
+                   "entrada": entrada_del_caso(caso), "resultado": e["resultado"]}
+        if caso["tipo"] == "reporte":
+            ejemplo["descripcion"] = caso["descripcion"]
+            ejemplo["log"] = caso.get("log", "")
+        else:
+            ejemplo["historia"] = caso["entrada"]
+        ejemplos.append(ejemplo)
+    return {"modelo": modelo, "fecha": f"{datetime.now():%Y-%m-%d}", "ejemplos": ejemplos}
+
+
+def recalificar_ejecuciones(casos, ejecuciones):
+    """Vuelve a calificar ejecuciones guardadas con las reglas actuales. No llama a la IA."""
+    por_id = {c["id"]: c for c in casos}
+    nuevas = []
+    for e in ejecuciones:
+        e = dict(e)
+        caso = por_id.get(e["caso"])
+        if caso and "resultado" in e:
+            metricas, fallas = evaluar_resultado(caso, entrada_del_caso(caso), e["resultado"])
+            e.update(metricas)
+            e["fallas"] = fallas
+            e["aprobado"] = not fallas
+        nuevas.append(e)
+    return nuevas
+
+
+def recalificar(ruta, guardar_demo=False):
+    """Recalifica una corrida guardada y escribe <nombre>_recalificado.json y .md."""
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    casos = json.loads(CASOS.read_text(encoding="utf-8"))["casos"]
+    ejecuciones = recalificar_ejecuciones(casos, datos["ejecuciones"])
+    resumen = resumir(ejecuciones)
+    destino = ruta.with_name(ruta.stem + "_recalificado")
+    destino.with_suffix(".json").write_text(
+        json.dumps({"modelo": datos["modelo"], "recalificado_de": ruta.name, "resumen": resumen,
+                    "ejecuciones": ejecuciones}, ensure_ascii=False, indent=2), encoding="utf-8")
+    md = a_markdown(resumen, ejecuciones, datos["modelo"])
+    md = md.replace("\n", f"\n\nRecalificación de `{ruta.name}` con las reglas actuales (sin llamar a la IA).\n", 1)
+    destino.with_suffix(".md").write_text(md, encoding="utf-8")
+    print(f"Aprobadas: {resumen['aprobadas']} de {resumen['ejecuciones']} ({resumen['porcentaje_aprobadas']} %)")
+    print(f"Resultados en {destino.with_suffix('.md')}")
+    if guardar_demo:
+        ejemplos = ejemplos_para_demo(casos, ejecuciones, datos["modelo"])
+        EJEMPLOS_DEMO.write_text(json.dumps(ejemplos, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Demo: {len(ejemplos['ejemplos'])} ejemplo(s) guardados en demo/ejemplos.json")
 
 
 def resumir(ejecuciones):
@@ -193,7 +264,15 @@ def main():
     parser = argparse.ArgumentParser(description="Evalúa la herramienta con un set fijo de casos.")
     parser.add_argument("--repeticiones", type=int, default=1)
     parser.add_argument("--casos", default="", help="IDs separados por coma, por ejemplo G01,R01")
+    parser.add_argument("--guardar-demo", action="store_true",
+                        help="Guarda los resultados aprobados en demo/ejemplos.json para el modo demo")
+    parser.add_argument("--recalificar", default="",
+                        help="Vuelve a calificar una corrida guardada (.json) sin llamar a la IA")
     args = parser.parse_args()
+
+    if args.recalificar:
+        recalificar(Path(args.recalificar), args.guardar_demo)
+        return
 
     casos = json.loads(CASOS.read_text(encoding="utf-8"))["casos"]
     if args.casos:
@@ -227,6 +306,12 @@ def main():
     print(f"\nAprobadas: {resumen['aprobadas']} de {resumen['ejecuciones']} ({resumen['porcentaje_aprobadas']} %)")
     print(f"Tokens: {resumen['tokens_entrada_total']} de entrada / {resumen['tokens_salida_total']} de salida")
     print(f"Resultados en evaluacion/resultados/{nombre}.md")
+
+    if args.guardar_demo and modelo != "simulador":
+        ejemplos = ejemplos_para_demo(casos, ejecuciones, modelo)
+        EJEMPLOS_DEMO.parent.mkdir(parents=True, exist_ok=True)
+        EJEMPLOS_DEMO.write_text(json.dumps(ejemplos, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Demo: {len(ejemplos['ejemplos'])} ejemplo(s) guardados en demo/ejemplos.json")
 
 
 if __name__ == "__main__":

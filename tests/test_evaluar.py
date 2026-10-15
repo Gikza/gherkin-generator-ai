@@ -1,7 +1,8 @@
 """Tests de la evaluación: cómo se califica un resultado y cómo se resume, sin llamar a la IA."""
 import json
 
-from evaluar import CASOS, a_markdown, entrada_del_caso, evaluar_resultado, resumir
+from evaluar import (CASOS, a_markdown, contiene_palabra, entrada_del_caso, evaluar_resultado,
+                     recalificar_ejecuciones, resumir)
 from simulador import ENTRADA_SIMULADA, REPORTE_SIMULADO
 
 CASO_REPORTE = {"id": "X1", "nombre": "Prueba", "tipo": "reporte", "esperado": "reporte",
@@ -83,3 +84,19 @@ def test_resumen_y_markdown():
     assert r["reglas_mas_frecuentes_intento_1"] == [("B12", 1)]
     md = a_markdown(r, ejecuciones, "modelo-x")
     assert "1 de 2 (50 %)" in md and "| B b |" in md
+
+
+def test_busca_palabras_completas_y_no_partes_de_palabras():
+    # Falso positivo real de la evaluación: "iOS" dentro de "pasos previos".
+    assert not contiene_palabra("Completar los pasos previos", "iOS")
+    assert contiene_palabra("Probado en iOS 17", "iOS")
+    assert contiene_palabra("Pasó 2 de 10 intentos", "2 de 10")
+    assert contiene_palabra("Error 500: TypeError: Cannot read", "TypeError: Cannot read")
+
+
+def test_recalificar_usa_las_reglas_actuales_sin_llamar_a_la_ia():
+    caso = dict(CASO_REPORTE, id="X1", descripcion="Al iniciar sesión aparece Error 500", no_debe_contener=["iOS"])
+    texto = REPORTE_SIMULADO.replace("El usuario de prueba está registrado.", "Completar los pasos previos.")
+    guardada = {"caso": "X1", "aprobado": False, "fallas": ['Contiene "iOS"'], "resultado": resultado(texto)}
+    nueva = recalificar_ejecuciones([caso], [guardada])[0]
+    assert not any("iOS" in f for f in nueva["fallas"])
