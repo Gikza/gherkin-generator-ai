@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 import uso
 
-from prompt import CRITERIO_PERMISOS
+from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS
 
 load_dotenv()
 
@@ -28,6 +28,10 @@ según estas reglas:
 Permisos: {CRITERIO_PERMISOS} Si la historia restringe el acceso, los escenarios de rol \
 denegado, acceso por URL directa y usuario sin sesión son obligatorios: NO los marques como \
 R23 ni como R10. Si la historia no restringe el acceso, esos escenarios SÍ son R23.
+
+Longitud: {CRITERIO_LONGITUD} Si la historia define un máximo y falta probarlo en el límite, es \
+R14. Si no lo define y el archivo prueba (o supone) un máximo, es R23. Un comentario \
+"# Pregunta abierta" sobre la longitud es correcto: no lo marques.
 
 Reportá solo violaciones claras. Si dudás, no lo reportes. Si no hay problemas, \
 devolvé una lista vacía.

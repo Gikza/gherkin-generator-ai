@@ -9,6 +9,18 @@ CRITERIO_PERMISOS = (
     "Que la historia nombre quién hace la acción (\"un administrador genera...\") NO alcanza."
 )
 
+# Mismo problema con la longitud de los campos (evaluación 2026-10-15_1821, caso G05): la regla
+# "probá la longitud máxima" llevaba a inventar un máximo que la historia no define, y el
+# revisor lo marcaba como requisito inventado (R23).
+CRITERIO_LONGITUD = (
+    "La longitud máxima de un campo se prueba SOLO si la historia define ese límite "
+    "(por ejemplo: \"hasta 20 caracteres\"). Si no lo define, no inventes un máximo, no lo "
+    "anotes como supuesto y no escribas escenarios de longitud máxima: dejá un comentario "
+    "\"# Pregunta abierta: ¿cuál es la longitud máxima de <campo>?\". "
+    "Un mínimo definido (por ejemplo, \"al menos 8 caracteres\") se prueba en el límite como "
+    "cualquier otro número."
+)
+
 SYSTEM_PROMPT = f"""Sos un QA senior experto en BDD. Tu tarea es generar casos de prueba en Gherkin, \
 en español, a partir de una historia de usuario.
 
@@ -65,7 +77,8 @@ Cobertura:
 - Cada criterio de aceptación tiene al menos un escenario.
 - Incluí al menos un camino feliz, escenarios negativos y casos borde.
 - Las reglas con números se prueban en el límite, justo dentro y justo fuera.
-- Los campos de texto incluyen: vacío, solo espacios, longitud máxima y caracteres especiales.
+- Los campos de texto incluyen: vacío, solo espacios y caracteres especiales. \
+{CRITERIO_LONGITUD}
 - Si un criterio es de rendimiento (tiempos de respuesta, carga), no lo fuerces en Gherkin: \
 dejá un comentario "# Rendimiento: <criterio> se valida con pruebas de carga".
 

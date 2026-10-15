@@ -1,7 +1,7 @@
 """Tests de los prompts: generador y revisor tienen que compartir los mismos criterios."""
 import json
 
-from prompt import CRITERIO_PERMISOS, SYSTEM_PROMPT
+from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS, SYSTEM_PROMPT
 from reporte_prompt import GRAVEDAD_REPORTE
 from revisor import REVISOR_PROMPT
 
@@ -22,3 +22,10 @@ def test_el_ejemplo_de_json_del_revisor_es_valido():
 def test_la_severidad_del_reporte_es_solo_una_sugerencia():
     # Decisión de diseño: la IA no corrige la severidad por su cuenta; la decide la QA.
     assert GRAVEDAD_REPORTE["B11"] == "baja"
+
+
+def test_generador_y_revisor_usan_el_mismo_criterio_de_longitud():
+    # Evaluación 2026-10-15_1821 (G05): el generador inventaba una longitud máxima
+    # y el revisor la marcaba como requisito inventado (R23).
+    assert CRITERIO_LONGITUD in SYSTEM_PROMPT
+    assert CRITERIO_LONGITUD in REVISOR_PROMPT

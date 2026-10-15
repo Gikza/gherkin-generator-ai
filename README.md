@@ -125,11 +125,11 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-79 tests:
+80 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
-- **Prompts (3):** generador y revisor comparten el mismo criterio de permisos, y la severidad del reporte es solo una sugerencia.
+- **Prompts (4):** generador y revisor comparten los mismos criterios de permisos y de longitud, y la severidad del reporte es solo una sugerencia.
 - **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
 - **Modo demo (7):** busca el resultado grabado de cada ejemplo, avisa si la entrada no es un ejemplo y guarda solo ejecuciones aprobadas.
 - **Evaluación (10):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
@@ -166,7 +166,7 @@ El ciclo de revisión corrigió todos los problemas graves del primer intento: e
 **Segunda corrida** (mismo día y mismos casos, [detalle](evaluacion/resultados/2026-10-15_1821_recalificado.md)): **9 de 10**. Dejó dos aprendizajes:
 
 - **La evaluación también se testea.** Marcó como inventado "iOS" porque lo encontró dentro de "pasos prev*ios*". Corregí el chequeo para que busque palabras completas y agregué `--recalificar`, que vuelve a calificar una corrida guardada sin llamar a la IA.
-- **Choque entre reglas (pendiente).** En "recuperar contraseña", la regla que pide probar la longitud máxima de los campos llevó a la IA a inventar un máximo de 128 caracteres que la historia no define, y el revisor lo marcó como requisito inventado (R23). Es el mismo tipo de conflicto que hubo con los permisos.
+- **Choque entre reglas (resuelto).** En "recuperar contraseña", la regla que pide probar la longitud máxima de los campos llevó a la IA a inventar un máximo de 128 caracteres que la historia no define, y el revisor lo marcó como requisito inventado (R23). Como con los permisos, definí un criterio común (`CRITERIO_LONGITUD`): el máximo se prueba solo si la historia lo define; si no, queda como `# Pregunta abierta`. En la verificación ([detalle](evaluacion/resultados/2026-10-15_1901.md)), las dos ejecuciones de ese caso dejaron la pregunta abierta en lugar de inventar el límite. Una de ellas falló por otro motivo: supuestos que agregan comportamiento nuevo (por ejemplo, "el enlace es de un solo uso"), que el revisor marcó como requisitos inventados. Es el próximo ajuste.
 
 ## Integración continua
 
