@@ -19,6 +19,21 @@ Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado
 - Si la historia es ambigua (por ejemplo, "la búsqueda debe ser rápida"), **pregunta en lugar de inventar requisitos**.
 - Las preguntas se **responden en la misma pantalla**: la herramienta agrega las respuestas a la historia y vuelve a generar. Las preguntas que quedan sin responder se toman como supuestos y se anotan en el archivo.
 - Muestra los supuestos que tomó, la tabla de cobertura por criterio y los problemas que quedaron sin resolver.
+- **De Gherkin a Playwright:** descarga un `.zip` con un proyecto Playwright + TypeScript listo para completar (ver abajo).
+
+### De Gherkin a Playwright
+
+Con el `.feature` generado, la herramienta arma el esqueleto de un proyecto de automatización con [playwright-bdd](https://github.com/vitalets/playwright-bdd), que corre los `.feature` con Playwright:
+
+- Una definición de paso por cada paso distinto, con sus parámetros tipados: los textos entre comillas pasan a `{string}` y los números a `{int}` o `{float}`.
+- Los esquemas de escenario se expanden fila por fila, y se verifica que **cada paso tenga exactamente una definición**: ni pasos sin definir ni ambiguos, que `bddgen` rechazaría.
+- Cada paso queda **pendiente a propósito**. Esta parte no usa IA: sin ver la página real, cualquier selector sería inventado. La QA completa los pasos con la aplicación delante.
+
+```bash
+npm install
+npx playwright install chromium
+npm test          # todos los pasos fallan como "pendiente" hasta completarlos
+```
 
 ### Reportes de bugs
 
@@ -79,6 +94,7 @@ La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó
 | Archivo | Función |
 |---|---|
 | `app.py` | Interfaz web (Streamlit) |
+| `esqueleto.py` | De Gherkin a Playwright: arma el proyecto con playwright-bdd (sin IA) |
 | `aclaraciones.py` | Une la historia con las respuestas a las preguntas (sin IA) |
 | `reporte.py` | Reportes de bugs: arma la entrada y reutiliza el ciclo de `generador.py` |
 | `reporte_prompt.py` | Instrucciones del generador y del revisor de reportes, y su tabla de gravedad |
@@ -125,7 +141,7 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-81 tests:
+101 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
@@ -133,6 +149,7 @@ python validador.py ejemplos
 - **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
 - **Modo demo (7):** busca el resultado grabado de cada ejemplo, avisa si la entrada no es un ejemplo y guarda solo ejecuciones aprobadas.
 - **Evaluación (10):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
+- **Esqueleto Playwright (20):** conversión de pasos a Cucumber Expressions (textos, números, formatos locales y caracteres especiales), pasos repetidos, palabras heredadas por "Y" y "Pero", esquemas expandidos, contenido del `.zip`, y que ningún `.feature` de ejemplo tenga pasos ambiguos o sin definir.
 - **Ciclo de revisión (7):** con funciones falsas, sin llamar a la IA: no corrige si no hay problemas graves, respeta el máximo de correcciones, se queda con la última versión si la IA responde con preguntas y le pasa al validador lo que contó el QA.
 
 ```bash
@@ -186,7 +203,7 @@ En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwrig
 
 ## Tests de interfaz (Playwright + TypeScript)
 
-12 tests end-to-end que cubren las dos pestañas: validación de la entrada, respuestas de la IA, preguntas de aclaración, descargas y manejo de errores.
+13 tests end-to-end que cubren las dos pestañas: validación de la entrada, respuestas de la IA, preguntas de aclaración, descargas y manejo de errores.
 
 ```bash
 cd e2e
@@ -199,7 +216,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 | Grupo | Qué se prueba |
 |---|---|
 | Validación de la entrada | Historia vacía y solo con espacios |
-| Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga |
+| Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga del `.feature` y del esqueleto Playwright |
 | Respuestas a las preguntas | Generar después de responder; exigir al menos una respuesta |
 | Reporte de bug | Descripción vacía, generación con validación, descarga y preguntas por datos esenciales |
 | Manejo de errores | Mensaje claro si la IA tarda demasiado |
@@ -211,6 +228,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 - [x] Integración continua con GitHub Actions
 - [x] Responder las preguntas de aclaración desde la misma pantalla
 - [x] Generación de reportes de bugs (segunda funcionalidad)
+- [x] Esqueleto Playwright (playwright-bdd) a partir del `.feature`
 
 ## Stack
 

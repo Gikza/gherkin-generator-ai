@@ -44,7 +44,7 @@ test.describe('Respuesta de la IA', () => {
     for (const regla of ['R04', 'R05', 'R07', 'R08', 'R20']) {
       await expect(page.getByText(`${regla}: OK`)).toBeVisible();
     }
-    await expect(page.locator('[data-testid="stCode"]')).toContainText('Característica: Inicio de sesión');
+    await expect(page.locator('[data-testid="stCode"]').first()).toContainText('Característica: Inicio de sesión');
   });
 
   test('descarga el archivo .feature generado', async ({ page }) => {
@@ -57,6 +57,18 @@ test.describe('Respuesta de la IA', () => {
     expect(archivo.suggestedFilename()).toBe('casos.feature');
     const contenido = readFileSync(await archivo.path(), 'utf-8');
     expect(contenido.startsWith('# language: es')).toBe(true);
+  });
+
+  test('descarga el esqueleto Playwright en .zip', async ({ page }) => {
+    await generar(page, 'Como usuario registrado quiero iniciar sesión para acceder a mi cuenta.');
+
+    const descarga = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Descargar esqueleto Playwright (.zip)' }).click();
+    const archivo = await descarga;
+
+    expect(archivo.suggestedFilename()).toBe('esqueleto-playwright.zip');
+    const bytes = readFileSync(await archivo.path());
+    expect(bytes.subarray(0, 2).toString()).toBe('PK'); // firma de un .zip
   });
 });
 

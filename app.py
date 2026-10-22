@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from aclaraciones import armar_historia, hay_respuestas, separar_preguntas
 from demo import SinEjemploGrabado, ejemplos_de
+from esqueleto import empaquetar, generar_esqueleto
 from reporte import armar_entrada
 from reporte_validador import validar_reporte
 from validador import validar_texto
@@ -139,6 +140,24 @@ def mostrar_revision(resultado, validaciones):
             st.success(f"{regla}: OK")
 
 
+def mostrar_esqueleto(feature):
+    """Descarga del proyecto Playwright + playwright-bdd con los pasos pendientes."""
+    try:
+        archivos = generar_esqueleto(feature)
+    except Exception:  # un .feature que no parsea no debe romper la pantalla
+        st.caption("No se pudo armar el esqueleto Playwright: el .feature tiene errores de sintaxis.")
+        return
+    st.download_button(
+        "Descargar esqueleto Playwright (.zip)",
+        data=empaquetar(archivos),
+        file_name="esqueleto-playwright.zip",
+        mime="application/zip",
+    )
+    with st.expander("Ver pasos para Playwright (steps/pasos.ts)"):
+        st.caption("Cada paso queda pendiente: sin la página real, los selectores serían inventados.")
+        st.code(archivos["steps/pasos.ts"], language="typescript")
+
+
 def mostrar_historial(resultado):
     with st.expander("Historial de intentos"):
         for paso in resultado["historial"]:
@@ -185,6 +204,7 @@ with pestana_gherkin:
             file_name="casos.feature",
             mime="text/plain",
         )
+        mostrar_esqueleto(feature)
         mostrar_historial(resultado)
 
 # --- Reporte de bug ----------------------------------------------------------
