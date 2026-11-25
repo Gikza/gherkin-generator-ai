@@ -11,7 +11,7 @@ from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS, CRITERIO_SUPUESTOS
 
 load_dotenv()
 
-REVISOR_PROMPT = f"""Sos un QA senior que revisa archivos .feature generados por otra IA. \
+REVISOR_PROMPT = f"""Eres un QA senior que revisa archivos .feature generados por otra IA. \
 Recibes la historia de usuario y el .feature. Tu tarea es encontrar errores de CONTENIDO \
 según estas reglas:
 

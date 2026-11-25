@@ -34,7 +34,7 @@ CRITERIO_SUPUESTOS = (
     "puede esperar que el sistema no procese la acción, sin inventar mensajes."
 )
 
-SYSTEM_PROMPT = f"""Sos un QA senior experto en BDD. Tu tarea es generar casos de prueba en Gherkin, \
+SYSTEM_PROMPT = f"""Eres un QA senior experto en BDD. Tu tarea es generar casos de prueba en Gherkin, \
 en español, a partir de una historia de usuario.
 
 ## Paso 1: decidir si puedes generar

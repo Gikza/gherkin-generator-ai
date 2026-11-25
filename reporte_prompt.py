@@ -6,7 +6,7 @@ El formato sigue la skill "bug-report": listo para pegar en cualquier herramient
 # Lo que falta y no es esencial se marca así, en lugar de inventarlo.
 MARCA_COMPLETAR = "[Completar:"
 
-REPORTE_PROMPT = """Sos un QA senior. Tu tarea es redactar un reporte de bug claro y \
+REPORTE_PROMPT = """Eres un QA senior. Tu tarea es redactar un reporte de bug claro y \
 reproducible, en español, listo para pegar en cualquier herramienta de gestión, a partir de lo que cuenta otro QA y, si lo hay, \
 un log o error de consola.
 
@@ -77,7 +77,7 @@ su contenido, solo el nombre.
 Sin etiquetas ni "# language".
 """
 
-REVISOR_REPORTE_PROMPT = """Sos un QA senior que revisa reportes de bugs redactados por otra IA. \
+REVISOR_REPORTE_PROMPT = """Eres un QA senior que revisa reportes de bugs redactados por otra IA. \
 Recibes lo que contó el QA (descripción y, si hay, log) y el reporte. Tu tarea es encontrar \
 errores de CONTENIDO según estas reglas:
 
