@@ -8,7 +8,8 @@
   B06 - Resultado esperado y actual completos y distintos
   B07 - 1 o 2 casos de regresión en Gherkin
   B08 - Los datos concretos del reporte (URLs, rutas, códigos, versiones, textos entre
-        comillas, navegadores y sistemas) aparecen en lo que contó el QA: no están inventados
+        comillas, navegadores, sistemas y nombres de archivo) aparecen en lo que contó el QA:
+        no están inventados
 """
 import re
 
@@ -144,6 +145,7 @@ _DATOS_CONCRETOS = [
     r"\b(\d+(?:\.\d+)+)\b",               # versiones como 118.0.5
     r"\b(\d{3,})\b",                        # códigos y números de 3 o más cifras
     r"\b(" + "|".join(NOMBRES_DE_PLATAFORMAS) + r")\b",
+    r"\b([\w\-]+\.(?:png|jpe?g|gif|webp|mp4|webm|mov|har|log|txt))\b",  # nombres de archivo
 ]
 
 

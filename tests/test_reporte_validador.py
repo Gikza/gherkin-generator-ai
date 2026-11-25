@@ -157,3 +157,39 @@ def test_b08_no_revisa_hipotesis_ni_resultado_esperado():
     texto = cambiar("Resultado esperado", "La llamada responde 200.")
     texto = texto.replace("**Casos de regresión:**", "**Notas:** Posible `null` en el cupón.\n**Casos de regresión:**")
     assert "B08" not in reglas_con_fallas(texto)
+
+
+# --- Adjuntos subidos por el QA -------------------------------------------------
+
+def test_armar_entrada_lista_los_adjuntos_por_tipo():
+    entrada = armar_entrada("El login falla", adjuntos=["error_login.png", "pasos.mp4"])
+    assert entrada.endswith(
+        "Adjuntos aportados por el QA (la IA no ve su contenido):\n"
+        "- captura: error_login.png\n- video: pasos.mp4"
+    )
+
+
+def test_armar_entrada_sin_adjuntos_no_agrega_la_seccion():
+    assert "Adjuntos" not in armar_entrada("El login falla", adjuntos=[])
+
+
+ENTRADA_CON_CAPTURA = armar_entrada(
+    "Al aplicar el cupón VERANO10 en el carrito, el total no cambia y aparece un mensaje en rojo.",
+    LOG,
+    adjuntos=["carrito_cupon.png"],
+)
+
+
+def test_b08_acepta_la_captura_que_subio_el_qa():
+    texto = cambiar("Evidencia", "Captura: carrito_cupon.png", REPORTE_CUPON)
+    assert "B08" not in reglas_con_fallas(texto, ENTRADA_CON_CAPTURA)
+
+
+def test_b08_detecta_un_nombre_de_archivo_inventado():
+    texto = cambiar("Evidencia", "Captura: carrito_cupon.png; captura: network.png", REPORTE_CUPON)
+    assert "B08" in reglas_con_fallas(texto, ENTRADA_CON_CAPTURA)
+
+
+def test_b08_detecta_video_si_solo_se_subio_una_captura():
+    texto = cambiar("Evidencia", "Captura: carrito_cupon.png y video de los pasos", REPORTE_CUPON)
+    assert "B08" in reglas_con_fallas(texto, ENTRADA_CON_CAPTURA)

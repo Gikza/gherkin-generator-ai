@@ -62,6 +62,9 @@ máximo 80 caracteres.
 - Evidencia: nombrá SOLO lo que el QA aportó (por ejemplo, la línea del log). Nunca escribas \
 una captura, un video o un log completo como si existieran: lo que conviene adjuntar va como \
 "[Completar: adjuntar <qué>]".
+- Si la entrada trae "Adjuntos aportados por el QA", listalos en Evidencia con su nombre de \
+archivo exacto (por ejemplo: "Captura: error_login.png"). No describas lo que muestran: no ves \
+su contenido, solo el nombre.
 - Si hay log: en Notas citá la línea relevante y explicá en una oración qué indica.
 - Severidad:
   - Crítica: bloquea una funcionalidad principal y no hay alternativa.

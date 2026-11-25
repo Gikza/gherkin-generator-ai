@@ -57,6 +57,7 @@ def generar_con_revision(historia, avisar=lambda mensaje: None):
 #   - Descripción con "no anda"        -> preguntas de aclaración
 #   - Descripción con "ERROR_TIMEOUT"  -> la IA tarda demasiado
 #   - Cualquier otra descripción       -> un reporte válido
+#   - Con adjuntos                     -> la Evidencia nombra los archivos subidos
 
 # Lo que "contó el QA" para el reporte simulado: B08 lo usa para verificar los datos.
 ENTRADA_SIMULADA = (
@@ -98,9 +99,17 @@ def generar_reporte_con_revision(entrada, avisar=lambda mensaje: None):
             "contenido": "1. ¿Qué pasa exactamente cuando falla?\n2. ¿Qué debería pasar?",
         }
 
+    # Si el QA subió archivos, la Evidencia los nombra (como pide el prompt real).
+    contenido = REPORTE_SIMULADO
+    marca = "Adjuntos aportados por el QA (la IA no ve su contenido):\n"
+    if marca in entrada:
+        lineas = entrada.split(marca, 1)[1].strip().splitlines()
+        evidencia = "; ".join(l.lstrip("- ").capitalize() for l in lineas)
+        contenido = contenido.replace("[Completar: captura del error]", evidencia)
+
     return {
         "tipo": "reporte",
-        "contenido": REPORTE_SIMULADO,
+        "contenido": contenido,
         "problemas": [],
         "revisor_ok": True,
         "historial": [{"intento": 1, "problemas": []}],

@@ -151,6 +151,29 @@ test.describe('Reporte de bug', () => {
 
     await expect(page.getByRole('heading', { name: 'Reporte', exact: true })).toBeVisible();
   });
+
+  test('lista en Evidencia la captura que subió el QA', async ({ page }) => {
+    // Imagen PNG de 1x1 píxel: alcanza para probar la subida sin guardar archivos en el repo.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await page.getByRole('tab', { name: 'Reporte de bug' }).click();
+    const cuadro = page.getByLabel('Descripción del bug');
+    await cuadro.fill(descripcion);
+    await cuadro.press('Control+Enter');
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'error_login.png', mimeType: 'image/png', buffer: png,
+    });
+    // Streamlit sube el archivo en segundo plano: hay que esperar a que aparezca en la lista
+    // antes de generar, o el reporte se arma sin el adjunto.
+    await expect(page.getByRole('button', { name: 'Remove error_login.png' })).toBeVisible();
+    await page.getByRole('button', { name: 'Generar reporte' }).click();
+
+    await expect(page.getByText('Captura: error_login.png').first()).toBeVisible();
+    await expect(page.getByText('B08: OK')).toBeVisible();
+    await expect(page.getByText('Adjuntos para subir a tu herramienta de gestión (1)')).toBeVisible();
+  });
 });
 
 test.describe('Manejo de errores', () => {

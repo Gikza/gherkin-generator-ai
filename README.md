@@ -38,6 +38,7 @@ npm test          # todos los pasos fallan como "pendiente" hasta completarlos
 ### Reportes de bugs
 
 - Escribís el bug con tus palabras y, si querés, pegás un log o error de consola.
+- Podés subir capturas o videos del bug. **La IA no los ve**: solo recibe el nombre de cada archivo, para listarlo en Evidencia sin inventar lo que muestra. La app los deja a mano para que los subas a tu herramienta de gestión.
 - Si faltan datos esenciales (qué pasó, qué debería pasar o cómo se llega al error), **pregunta**. Lo que no es esencial, como el navegador o la versión, queda marcado como `[Completar: ...]`: **nunca se inventa**.
 - El reporte incluye título con módulo, entorno, precondiciones, pasos, resultado esperado y actual, severidad justificada, frecuencia, evidencia y **1 o 2 casos de regresión en Gherkin** para verificar el arreglo.
 
@@ -74,7 +75,7 @@ Los reportes de bugs tienen sus propias reglas, con el mismo criterio de capas:
 | Python | B01 a B08 | Campos obligatorios y en orden, título con `[Módulo]` y hasta 80 caracteres, severidad de la escala con justificación, frecuencia válida, al menos 2 pasos, esperado distinto de actual, 1 o 2 casos de regresión y **datos inventados (B08)** |
 | Revisor IA | B10 a B15 | Datos inventados, severidad incoherente, pasos no reproducibles, resultado actual que no copia el error, log sin explicar |
 
-**B08 verifica con código, no con la IA, que el reporte no invente datos.** Cada dato concreto (URLs, rutas, códigos, versiones, textos entre comillas, navegadores y sistemas) tiene que aparecer en lo que contó el QA, y la Evidencia no puede dar por hechas capturas, videos o stack traces que el QA no aportó: van como `[Completar: adjuntar ...]`. No revisa el resultado esperado, las notas ni los casos de regresión, porque describen lo que debería pasar o lo que se sospecha.
+**B08 verifica con código, no con la IA, que el reporte no invente datos.** Cada dato concreto (URLs, rutas, códigos, versiones, textos entre comillas, navegadores, sistemas y nombres de archivo) tiene que aparecer en lo que contó el QA, y la Evidencia no puede dar por hechas capturas, videos o stack traces que el QA no aportó: van como `[Completar: adjuntar ...]`. No revisa el resultado esperado, las notas ni los casos de regresión, porque describen lo que debería pasar o lo que se sospecha.
 
 La **severidad (B11) es solo una sugerencia**: en una prueba, el revisor obligó a bajar un bug de Alta a Media en un caso discutible. La severidad depende del contexto del negocio, así que la decide la QA, no la IA.
 
@@ -141,12 +142,12 @@ python validador.py ejemplos
 
 ## Tests unitarios (pytest)
 
-101 tests:
+106 tests:
 
 - **Validador de casos Gherkin (14):** cada regla con casos que deben pasar y casos que deben fallar, incluido un archivo roto a propósito y el `.feature` que usa el simulador.
 - **Aclaraciones (7):** separar las preguntas de la IA y armar la historia con las respuestas, incluidas las preguntas sin responder.
 - **Prompts (5):** generador y revisor comparten los mismos criterios de permisos, longitud y supuestos, y la severidad del reporte es solo una sugerencia.
-- **Validador de reportes (31):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados.
+- **Validador de reportes (36):** cada regla B01 a B08 con casos que pasan y que fallan, incluido el caso real de adjuntos inventados y las capturas que sube el QA.
 - **Modo demo (7):** busca el resultado grabado de cada ejemplo, avisa si la entrada no es un ejemplo y guarda solo ejecuciones aprobadas.
 - **Evaluación (10):** cómo se califica cada resultado y cómo se arma el resumen, con resultados falsos.
 - **Esqueleto Playwright (20):** conversión de pasos a Cucumber Expressions (textos, números, formatos locales y caracteres especiales), pasos repetidos, palabras heredadas por "Y" y "Pero", esquemas expandidos, contenido del `.zip`, y que ningún `.feature` de ejemplo tenga pasos ambiguos o sin definir.
@@ -203,7 +204,7 @@ En cada `push`, **GitHub Actions** ejecuta los tests unitarios y los de Playwrig
 
 ## Tests de interfaz (Playwright + TypeScript)
 
-13 tests end-to-end que cubren las dos pestañas: validación de la entrada, respuestas de la IA, preguntas de aclaración, descargas y manejo de errores.
+14 tests end-to-end que cubren las dos pestañas: validación de la entrada, respuestas de la IA, preguntas de aclaración, descargas y manejo de errores.
 
 ```bash
 cd e2e
@@ -218,7 +219,7 @@ Los tests **no llaman a la IA real**: Playwright levanta la app en modo prueba (
 | Validación de la entrada | Historia vacía y solo con espacios |
 | Respuesta de la IA | Preguntas ante historias ambiguas, generación con validación, descarga del `.feature` y del esqueleto Playwright |
 | Respuestas a las preguntas | Generar después de responder; exigir al menos una respuesta |
-| Reporte de bug | Descripción vacía, generación con validación, descarga y preguntas por datos esenciales |
+| Reporte de bug | Descripción vacía, generación con validación, descarga, preguntas por datos esenciales y captura subida listada en Evidencia |
 | Manejo de errores | Mensaje claro si la IA tarda demasiado |
 
 ## Próximos pasos

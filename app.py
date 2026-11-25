@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from aclaraciones import armar_historia, hay_respuestas, separar_preguntas
 from demo import SinEjemploGrabado, ejemplos_de
 from esqueleto import empaquetar, generar_esqueleto
-from reporte import armar_entrada
+from reporte import EXTENSIONES_ADJUNTO, armar_entrada, tipo_de_adjunto
 from reporte_validador import validar_reporte
 from validador import validar_texto
 
@@ -213,13 +213,22 @@ with pestana_bug:
     selector_de_ejemplos("reporte", {"descripcion": "descripcion", "log": "log"}, "bug")
     descripcion = st.text_area("Descripción del bug", height=200, key="descripcion")
     log = st.text_area("Log o error de consola (opcional)", height=120, key="log")
+    # En la demo no se suben archivos: solo funcionan los ejemplos grabados.
+    adjuntos = [] if MODO_DEMO else st.file_uploader(
+        "Capturas o videos del bug (opcional)",
+        type=list(EXTENSIONES_ADJUNTO),
+        accept_multiple_files=True,
+        help="La IA no ve los archivos: solo usa sus nombres para listarlos en Evidencia.",
+        key="adjuntos",
+    ) or []
 
     if st.button("Generar reporte"):
         if not descripcion.strip():
             st.session_state.pop("bug_resultado", None)
             st.error("Describí el bug antes de generar el reporte.")
         else:
-            ejecutar("bug", generar_reporte_con_revision, armar_entrada(descripcion, log))
+            nombres = [archivo.name for archivo in adjuntos]
+            ejecutar("bug", generar_reporte_con_revision, armar_entrada(descripcion, log, nombres))
 
     resultado = st.session_state.get("bug_resultado")
 
@@ -248,4 +257,11 @@ with pestana_bug:
             file_name="reporte_bug.md",
             mime="text/markdown",
         )
+        if adjuntos:
+            with st.expander(f"Adjuntos para subir a tu herramienta de gestión ({len(adjuntos)})"):
+                for archivo in adjuntos:
+                    if tipo_de_adjunto(archivo.name) == "captura":
+                        st.image(archivo, caption=archivo.name)
+                    else:
+                        st.caption(archivo.name)
         mostrar_historial(resultado)
