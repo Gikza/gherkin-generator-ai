@@ -9,8 +9,8 @@ from pathlib import Path
 EJEMPLOS = Path(__file__).resolve().parent / "demo" / "ejemplos.json"
 
 MENSAJE_SIN_EJEMPLO = (
-    "En la demo solo funcionan los ejemplos grabados (elegí uno de la lista). "
-    "Para usar la IA con tus propias historias o bugs, corré la herramienta en tu compu: "
+    "En la demo solo funcionan los ejemplos grabados (elige uno de la lista). "
+    "Para usar la IA con tus propias historias o bugs, ejecuta la herramienta en tu compu: "
     "las instrucciones están en el repositorio."
 )
 

@@ -45,7 +45,7 @@ Característica: Permisos por rol en el panel de reclamos
   Esquema del escenario: Acciones denegadas según el rol
     Dado que "<usuario>" inició sesión
     Cuando intenta <acción>
-    Entonces la acción es rechazada con el mensaje "No tenés permisos para realizar esta acción"
+    Entonces la acción es rechazada con el mensaje "No tienes permisos para realizar esta acción"
     Y no se modifica ningún dato
 
     Ejemplos: Operador
@@ -68,7 +68,7 @@ Característica: Permisos por rol en el panel de reclamos
   Escenario: Operador intenta entrar a la gestión de usuarios por URL directa
     Dado que "oper1" inició sesión
     Cuando accede directamente a la dirección de la gestión de usuarios
-    Entonces ve el mensaje "No tenés permisos para realizar esta acción"
+    Entonces ve el mensaje "No tienes permisos para realizar esta acción"
     Y no ve la lista de usuarios
 
   @negativo

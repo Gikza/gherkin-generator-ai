@@ -54,9 +54,9 @@ def corregir(entrada, salida, problemas, system=SYSTEM_PROMPT, tipo="feature",
     """Pide al generador que corrija su respuesta según la lista de problemas."""
     lista = "\n".join(f"- {p['regla']}: {p['detalle']}" for p in problemas)
     pedido = (
-        "Revisá tu respuesta. Se encontraron estos problemas:\n"
+        "Revisa tu respuesta. Se encontraron estos problemas:\n"
         f"{lista}\n\n"
-        f"Corregilos y respondé con {formato}."
+        f"Corrígelos y responde con {formato}."
     )
     return llamar_generador([
         {"role": "user", "content": entrada},

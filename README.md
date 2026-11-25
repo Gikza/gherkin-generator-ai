@@ -15,7 +15,7 @@ Lo que la diferencia es que **no confía en la salida de la IA**: cada resultado
 
 ## Qué hace
 
-- Pegás una historia de usuario y obtenés un archivo `.feature` listo para Cucumber, con camino feliz, casos negativos y casos borde.
+- Pegas una historia de usuario y obtienes un archivo `.feature` listo para Cucumber, con camino feliz, casos negativos y casos borde.
 - Si la historia es ambigua (por ejemplo, "la búsqueda debe ser rápida"), **pregunta en lugar de inventar requisitos**.
 - Las preguntas se **responden en la misma pantalla**: la herramienta agrega las respuestas a la historia y vuelve a generar. Las preguntas que quedan sin responder se toman como supuestos y se anotan en el archivo.
 - Muestra los supuestos que tomó, la tabla de cobertura por criterio y los problemas que quedaron sin resolver.
@@ -37,8 +37,8 @@ npm test          # todos los pasos fallan como "pendiente" hasta completarlos
 
 ### Reportes de bugs
 
-- Escribís el bug con tus palabras y, si querés, pegás un log o error de consola.
-- Podés subir capturas o videos del bug. **La IA no los ve**: solo recibe el nombre de cada archivo, para listarlo en Evidencia sin inventar lo que muestra. La app los deja a mano para que los subas a tu herramienta de gestión.
+- Escribes el bug con tus palabras y, si quieres, pegas un log o error de consola.
+- Puedes subir capturas o videos del bug. **La IA no los ve**: solo recibe el nombre de cada archivo, para listarlo en Evidencia sin inventar lo que muestra. La app los deja a mano para que los subas a tu herramienta de gestión.
 - Si faltan datos esenciales (qué pasó, qué debería pasar o cómo se llega al error), **pregunta**. Lo que no es esencial, como el navegador o la versión, queda marcado como `[Completar: ...]`: **nunca se inventa**.
 - El reporte incluye título con módulo, entorno, precondiciones, pasos, resultado esperado y actual, severidad justificada, frecuencia, evidencia y **1 o 2 casos de regresión en Gherkin** para verificar el arreglo.
 

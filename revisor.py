@@ -12,7 +12,7 @@ from prompt import CRITERIO_LONGITUD, CRITERIO_PERMISOS, CRITERIO_SUPUESTOS
 load_dotenv()
 
 REVISOR_PROMPT = f"""Sos un QA senior que revisa archivos .feature generados por otra IA. \
-Recibís la historia de usuario y el .feature. Tu tarea es encontrar errores de CONTENIDO \
+Recibes la historia de usuario y el .feature. Tu tarea es encontrar errores de CONTENIDO \
 según estas reglas:
 
 - R02: los supuestos no se contradicen con los escenarios del archivo.
@@ -37,14 +37,14 @@ Supuestos: {CRITERIO_SUPUESTOS} Un supuesto que agrega comportamiento nuevo, y l
 que lo prueban, son R23. Un supuesto que solo interpreta algo de la historia es correcto. \
 Las líneas "# Pregunta abierta" son correctas: no las marques.
 
-Reportá solo violaciones claras. Si dudás, no lo reportes. Si no hay problemas, \
-devolvé una lista vacía.
+Reporta solo violaciones claras. Si dudas, no lo reportes. Si no hay problemas, \
+devuelve una lista vacía.
 
 Gravedad:
 - "alta": el escenario prueba algo incorrecto, contradice la historia o falta cobertura.
 - "baja": estilo o mejora menor.
 
-Respondé SOLO con JSON válido, sin texto adicional y sin ```, con este formato:
+Responde SOLO con JSON válido, sin texto adicional y sin ```, con este formato:
 {{"problemas": [{{"regla": "R11", "gravedad": "alta", "detalle": "Línea 34: ..."}}]}}
 """
 

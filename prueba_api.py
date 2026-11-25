@@ -15,7 +15,7 @@ respuesta = client.messages.create(
     messages=[
         {
             "role": "user",
-            "content": "Escribí un único escenario en Gherkin, en español, "
+            "content": "Escribe un único escenario en Gherkin, en español, "
                        "para un login exitoso.",
         }
     ],

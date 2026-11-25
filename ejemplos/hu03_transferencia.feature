@@ -44,7 +44,7 @@ Característica: Transferencia bancaria a otra cuenta
       | 01700992200000677973AB  | El CBU solo admite números           |
       | 0170099220000067797371  | El CBU no es válido                  |
       | alias.que.no.existe     | No se encontró una cuenta con ese alias |
-      |                         | Ingresá un CBU o alias de destino    |
+      |                         | Ingresa un CBU o alias de destino    |
 
   # --- Criterio 7: misma cuenta ---
   @negativo

@@ -18,12 +18,12 @@ test.beforeEach(async ({ page }) => {
 test.describe('Validación de la entrada', () => {
   test('muestra un error si la historia está vacía', async ({ page }) => {
     await page.getByRole('button', { name: 'Generar', exact: true }).click();
-    await expect(page.getByText('Pegá una historia de usuario antes de generar.')).toBeVisible();
+    await expect(page.getByText('Pega una historia de usuario antes de generar.')).toBeVisible();
   });
 
   test('muestra un error si la historia tiene solo espacios', async ({ page }) => {
     await generar(page, '     ');
-    await expect(page.getByText('Pegá una historia de usuario antes de generar.')).toBeVisible();
+    await expect(page.getByText('Pega una historia de usuario antes de generar.')).toBeVisible();
   });
 });
 
@@ -93,7 +93,7 @@ test.describe('Respuestas a las preguntas de aclaración', () => {
 
     await page.getByRole('button', { name: 'Generar con respuestas' }).click();
 
-    await expect(page.getByText('Respondé al menos una pregunta antes de generar.')).toBeVisible();
+    await expect(page.getByText('Responde al menos una pregunta antes de generar.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Escenarios' })).toHaveCount(0);
   });
 });
@@ -110,7 +110,7 @@ test.describe('Reporte de bug', () => {
 
   test('muestra un error si la descripción está vacía', async ({ page }) => {
     await generarReporte(page, '');
-    await expect(page.getByText('Describí el bug antes de generar el reporte.')).toBeVisible();
+    await expect(page.getByText('Describe el bug antes de generar el reporte.')).toBeVisible();
   });
 
   // Coincide con ENTRADA_SIMULADA (simulador.py), para que B08 encuentre los datos del reporte.

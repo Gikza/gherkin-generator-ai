@@ -175,7 +175,7 @@ def generar_pasos_ts(feature):
     defs = definiciones(feature)
     usa_tabla = any(d["argumento"] == "tabla" for d in defs)
     lineas = [
-        "// Generado a partir del .feature. Cada paso está PENDIENTE: completalo con Playwright.",
+        "// Generado a partir del .feature. Cada paso está PENDIENTE: complétalo con Playwright.",
         "// No incluye selectores a propósito: sin ver la página real, serían inventados.",
         "import { createBdd" + (", DataTable" if usa_tabla else "") + " } from 'playwright-bdd';",
         "",
@@ -218,7 +218,7 @@ export default defineConfig({
   testDir,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    // Completá la dirección de la aplicación que vas a probar.
+    // Completa la dirección de la aplicación que vas a probar.
     baseURL: process.env.BASE_URL,
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
@@ -245,8 +245,8 @@ npm test
 ```
 
 `npm test` primero convierte los `.feature` en tests (`bddgen`) y después los corre.
-Al principio todos fallan: es lo esperado. Completá cada paso en `steps/pasos.ts` con
-Playwright y definí la dirección de la aplicación en la variable `BASE_URL`.
+Al principio todos fallan: es lo esperado. Completa cada paso en `steps/pasos.ts` con
+Playwright y define la dirección de la aplicación en la variable `BASE_URL`.
 """
 
 
