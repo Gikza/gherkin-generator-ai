@@ -8,7 +8,7 @@ Uso:
   python evaluar.py                      (todos los casos, 1 vez)
   python evaluar.py --repeticiones 3     (cada caso 3 veces, para medir variabilidad)
   python evaluar.py --casos G01,R01      (solo algunos casos)
-  python evaluar.py --guardar-demo       (además, guarda los aprobados como ejemplos de la demo)
+  python evaluar.py --guardar-demo       (además, suma los aprobados a los ejemplos de la demo)
   python evaluar.py --recalificar evaluacion/resultados/<archivo>.json
                                          (vuelve a calificar una corrida guardada con las reglas
                                           actuales, sin llamar a la IA)
@@ -162,6 +162,28 @@ def ejemplos_para_demo(casos, ejecuciones, modelo):
     return {"modelo": modelo, "fecha": f"{datetime.now():%Y-%m-%d}", "ejemplos": ejemplos}
 
 
+def combinar_ejemplos(existentes, nuevos):
+    """Suma los ejemplos nuevos a los que ya tiene la demo, sin perder ninguno.
+
+    Si un caso ya estaba, lo reemplaza en su mismo lugar; si es nuevo, lo agrega al final.
+    Así, correr solo algunos casos con --guardar-demo no borra los demás.
+    """
+    por_id = {e["id"]: e for e in nuevos["ejemplos"]}
+    combinados = [por_id.pop(e["id"], e) for e in existentes.get("ejemplos", [])]
+    combinados += [e for e in nuevos["ejemplos"] if e["id"] in por_id]
+    return {**nuevos, "ejemplos": combinados}
+
+
+def guardar_ejemplos_demo(nuevos, ruta=EJEMPLOS_DEMO):
+    """Guarda los ejemplos en la demo combinándolos con los que ya había."""
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    existentes = json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
+    combinados = combinar_ejemplos(existentes, nuevos)
+    ruta.write_text(json.dumps(combinados, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Demo: {len(nuevos['ejemplos'])} ejemplo(s) guardados; "
+          f"la demo tiene {len(combinados['ejemplos'])} en total (demo/ejemplos.json)")
+
+
 def recalificar_ejecuciones(casos, ejecuciones):
     """Vuelve a calificar ejecuciones guardadas con las reglas actuales. No llama a la IA."""
     por_id = {c["id"]: c for c in casos}
@@ -194,9 +216,7 @@ def recalificar(ruta, guardar_demo=False):
     print(f"Aprobadas: {resumen['aprobadas']} de {resumen['ejecuciones']} ({resumen['porcentaje_aprobadas']} %)")
     print(f"Resultados en {destino.with_suffix('.md')}")
     if guardar_demo:
-        ejemplos = ejemplos_para_demo(casos, ejecuciones, datos["modelo"])
-        EJEMPLOS_DEMO.write_text(json.dumps(ejemplos, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"Demo: {len(ejemplos['ejemplos'])} ejemplo(s) guardados en demo/ejemplos.json")
+        guardar_ejemplos_demo(ejemplos_para_demo(casos, ejecuciones, datos["modelo"]))
 
 
 def resumir(ejecuciones):
@@ -265,7 +285,7 @@ def main():
     parser.add_argument("--repeticiones", type=int, default=1)
     parser.add_argument("--casos", default="", help="IDs separados por coma, por ejemplo G01,R01")
     parser.add_argument("--guardar-demo", action="store_true",
-                        help="Guarda los resultados aprobados en demo/ejemplos.json para el modo demo")
+                        help="Suma los resultados aprobados a demo/ejemplos.json, sin borrar los que ya había")
     parser.add_argument("--recalificar", default="",
                         help="Vuelve a calificar una corrida guardada (.json) sin llamar a la IA")
     args = parser.parse_args()
@@ -308,10 +328,7 @@ def main():
     print(f"Resultados en evaluacion/resultados/{nombre}.md")
 
     if args.guardar_demo and modelo != "simulador":
-        ejemplos = ejemplos_para_demo(casos, ejecuciones, modelo)
-        EJEMPLOS_DEMO.parent.mkdir(parents=True, exist_ok=True)
-        EJEMPLOS_DEMO.write_text(json.dumps(ejemplos, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"Demo: {len(ejemplos['ejemplos'])} ejemplo(s) guardados en demo/ejemplos.json")
+        guardar_ejemplos_demo(ejemplos_para_demo(casos, ejecuciones, modelo))
 
 
 if __name__ == "__main__":

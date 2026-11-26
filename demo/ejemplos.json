@@ -1,6 +1,6 @@
 {
   "modelo": "claude-haiku-5-5",
-  "fecha": "2026-11-25",
+  "fecha": "2026-11-26",
   "ejemplos": [
     {
       "id": "G01",
@@ -223,6 +223,85 @@
         ]
       },
       "descripcion": "Al guardar el perfil con una foto mayor a 5 MB, la página queda en blanco. Debería mostrar un mensaje de que la foto es muy grande. Adjunto captura de la pantalla en blanco.",
+      "log": ""
+    },
+    {
+      "id": "G06",
+      "tipo": "gherkin",
+      "nombre": "Mercadito: cupón en el carrito (la historia de la guía)",
+      "entrada": "Como cliente, quiero aplicar un cupón de descuento en el carrito para pagar menos en mi compra.\n\nCriterios de aceptación:\n1. Si el cupón es válido, el total del carrito muestra el descuento.\n2. Si el cupón está vencido, aparece un mensaje de error.\n3. Se puede usar un solo cupón por compra.\n\nRespuestas del refinamiento:\n- El cupón pide una compra mínima de $5.000.\n- No se suma a los productos que ya están en oferta.\n- El descuento se recalcula si se quitan productos del carrito.\n- El código se acepta en mayúsculas o minúsculas.\n- Un cupón que no existe tiene su propio mensaje de error.",
+      "resultado": {
+        "tipo": "feature",
+        "contenido": "# language: es\n# Supuesto: el subtotal de la compra mínima de $5.000 se mide antes de aplicar el descuento.\n# Pregunta abierta: ¿qué tipo de descuento aporta el cupón (porcentaje o monto fijo) y de cuánto?\n# Pregunta abierta: ¿qué mensaje ve el cliente si intenta aplicar un cupón válido con un subtotal menor a $5.000?\n# Pregunta abierta: ¿qué pasa si al quitar productos el subtotal queda por debajo de $5.000 con el cupón aplicado?\n# Pregunta abierta: ¿qué pasa con el segundo cupón cuando ya hay uno aplicado (se rechaza, reemplaza al anterior o muestra un mensaje)?\n# Pregunta abierta: ¿cuál es la longitud máxima del código del cupón?\n# Pregunta abierta: ¿cómo responde el sistema ante un código con caracteres especiales?\n\n@regresion\nCaracterística: Aplicar cupón de descuento en el carrito\n  Como cliente\n  quiero aplicar un cupón de descuento en el carrito\n  para pagar menos en mi compra\n\n  @smoke\n  Escenario: Aplicar un cupón válido muestra el descuento en el total del carrito\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Y que el cupón \"VERANO10\" es válido y el subtotal alcanza la compra mínima\n    Cuando aplica el cupón \"VERANO10\" en el carrito\n    Entonces el total del carrito muestra el descuento\n    Y el total del carrito es menor que el subtotal\n\n  Esquema del escenario: El código del cupón se acepta en mayúsculas o minúsculas\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Y que el cupón \"VERANO10\" es válido y el subtotal alcanza la compra mínima\n    Cuando aplica el cupón <codigo> en el carrito\n    Entonces el total del carrito muestra el descuento\n\n    Ejemplos:\n      | codigo      |\n      | \"VERANO10\"  |\n      | \"verano10\"  |\n      | \"Verano10\"  |\n\n  Esquema del escenario: Un subtotal igual o superior a la compra mínima de $5.000 permite aplicar el cupón\n    Dado que el carrito tiene un subtotal de <subtotal>\n    Y que el cupón \"VERANO10\" es válido\n    Cuando aplica el cupón \"VERANO10\" en el carrito\n    Entonces el total del carrito muestra el descuento\n\n    Ejemplos:\n      | subtotal   |\n      | $5.000,00  |\n      | $5.000,01  |\n\n  @negativo\n  Escenario: Un subtotal menor a la compra mínima de $5.000 no permite aplicar el cupón\n    Dado que el carrito tiene un subtotal de $4.999,99\n    Y que el cupón \"VERANO10\" es válido\n    Cuando aplica el cupón \"VERANO10\" en el carrito\n    Entonces el total del carrito no muestra descuento\n\n  @negativo\n  Escenario: Aplicar un cupón vencido muestra un mensaje de error\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Y que el cupón \"VENCIDO5\" está vencido\n    Cuando aplica el cupón \"VENCIDO5\" en el carrito\n    Entonces aparece un mensaje de error\n    Y el total del carrito no muestra descuento\n\n  @negativo\n  Escenario: Aplicar un cupón que no existe muestra su propio mensaje de error\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Y que el cupón \"NOEXISTE\" no existe\n    Cuando aplica el cupón \"NOEXISTE\" en el carrito\n    Entonces aparece el mensaje de error de cupón inexistente\n    Y el total del carrito no muestra descuento\n\n  Escenario: El cupón no se aplica a productos que ya están en oferta\n    Dado que el carrito tiene un producto en oferta de $2.000,00\n    Y que el carrito tiene un producto sin oferta de $8.000,00\n    Y que el cupón \"VERANO10\" es válido\n    Cuando aplica el cupón \"VERANO10\" en el carrito\n    Entonces el descuento no incluye el producto en oferta\n    Y el descuento se calcula solo sobre el producto sin oferta\n\n  Escenario: El descuento se recalcula al quitar productos del carrito\n    Dado que el carrito tiene productos por un subtotal de $12.000,00\n    Y que el cupón \"VERANO10\" está aplicado en el carrito\n    Cuando quita del carrito un producto de $6.000,00\n    Entonces el descuento se recalcula sobre el nuevo subtotal\n    Y el total del carrito muestra el descuento recalculado\n\n  @negativo\n  Escenario: No se puede acumular un segundo cupón en la misma compra\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Y que el cupón \"VERANO10\" está aplicado en el carrito\n    Y que el cupón \"DESC20\" es válido\n    Cuando aplica el cupón \"DESC20\" en el carrito\n    Entonces el total del carrito no acumula los descuentos de ambos cupones\n\n  @negativo\n  Esquema del escenario: Aplicar un código vacío o con solo espacios no aplica descuento\n    Dado que el carrito tiene productos por un subtotal de $10.000,00\n    Cuando aplica el código <codigo> en el carrito\n    Entonces no se aplica ningún descuento\n\n    Ejemplos:\n      | codigo    |\n      | \"\"        |\n      | \"   \"     |\n\n# Cobertura: Si el cupón es válido, el total del carrito muestra el descuento -> Aplicar un cupón válido muestra el descuento en el total del carrito; El código del cupón se acepta en mayúsculas o minúsculas; Un subtotal igual o superior a la compra mínima de $5.000 permite aplicar el cupón\n# Cobertura: Si el cupón está vencido, aparece un mensaje de error -> Aplicar un cupón vencido muestra un mensaje de error\n# Cobertura: Se puede usar un solo cupón por compra -> No se puede acumular un segundo cupón en la misma compra\n# Cobertura: El cupón pide una compra mínima de $5.000 -> Un subtotal igual o superior a la compra mínima de $5.000 permite aplicar el cupón; Un subtotal menor a la compra mínima de $5.000 no permite aplicar el cupón\n# Cobertura: No se suma a los productos que ya están en oferta -> El cupón no se aplica a productos que ya están en oferta\n# Cobertura: El descuento se recalcula si se quitan productos del carrito -> El descuento se recalcula al quitar productos del carrito\n# Cobertura: El código se acepta en mayúsculas o minúsculas -> El código del cupón se acepta en mayúsculas o minúsculas\n# Cobertura: Un cupón que no existe tiene su propio mensaje de error -> Aplicar un cupón que no existe muestra su propio mensaje de error\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": [
+              {
+                "regla": "R22",
+                "gravedad": "alta",
+                "detalle": "Línea del Esquema 'El cupón se aplica solo si el subtotal alcanza la compra mínima de $5.000': el paso 'Entonces <resultado>' es solo un parámetro. El resultado debe escribirse como comportamiento explícito en el archivo, no delegarse a los Ejemplos."
+              },
+              {
+                "regla": "R23",
+                "gravedad": "alta",
+                "detalle": "Escenario 'Aplicar un código con caracteres especiales muestra un mensaje de error' (VER@NO#10!): la historia y sus respuestas de refinamiento no mencionan validación de caracteres especiales ni un mensaje para ese caso. Es una regla inventada. Debería ser una pregunta abierta. El comentario de cobertura que la atribuye a la historia tampoco es correcto."
+              }
+            ]
+          },
+          {
+            "intento": 2,
+            "problemas": []
+          }
+        ]
+      },
+      "historia": "Como cliente, quiero aplicar un cupón de descuento en el carrito para pagar menos en mi compra.\n\nCriterios de aceptación:\n1. Si el cupón es válido, el total del carrito muestra el descuento.\n2. Si el cupón está vencido, aparece un mensaje de error.\n3. Se puede usar un solo cupón por compra.\n\nRespuestas del refinamiento:\n- El cupón pide una compra mínima de $5.000.\n- No se suma a los productos que ya están en oferta.\n- El descuento se recalcula si se quitan productos del carrito.\n- El código se acepta en mayúsculas o minúsculas.\n- Un cupón que no existe tiene su propio mensaje de error."
+    },
+    {
+      "id": "R06",
+      "tipo": "reporte",
+      "nombre": "Mercadito: el cupón vencido aplica el descuento (MER-142)",
+      "entrada": "Descripción del QA:\nEn el carrito de Mercadito, con productos por $10.000, apliqué el cupón VERANO20 (20 % de descuento), que venció el 31 de octubre. No aparece ningún mensaje: el carrito aplica un descuento de $2.000, el total pasa a $8.000 y se puede seguir hasta el pago con ese total. Debería aparecer el mensaje de cupón vencido y el total seguir en $10.000. Pasa siempre: 5 de 5 intentos en web (Chrome 131 en Windows 11) y 5 de 5 en Android (Mercadito 2.4.0 en Android 13). El cupón vigente BIENVENIDA10 descuenta bien y el cupón inexistente HOLA123 muestra su error.",
+      "resultado": {
+        "tipo": "reporte",
+        "contenido": "**Título:** [Carrito] Cupón vencido VERANO20 aplica descuento sin mensaje de error\n**Entorno:** Web: Chrome 131 en Windows 11. Android: Mercadito 2.4.0 en Android 13. Ambiente: [Completar: ambiente]. Usuario de prueba: [Completar: usuario de prueba]\n**Precondiciones:** Cupón VERANO20 (20 % de descuento) vencido el 31 de octubre. Carrito con productos por $10.000. Cupón vigente BIENVENIDA10 disponible para comparar.\n**Pasos para reproducir:**\n1. Abrir el carrito de Mercadito con productos por $10.000.\n2. Escribir el cupón VERANO20 en el campo de cupón.\n3. Presionar aplicar.\n4. Observar el mensaje que aparece y el total del carrito.\n5. Continuar hasta la pantalla de pago.\n6. Verificar el total en la pantalla de pago.\n\n**Resultado esperado:** Aparece un mensaje de cupón vencido, el cupón no se aplica y el total se mantiene en $10.000.\n**Resultado actual:** No aparece ningún mensaje. El carrito aplica un descuento de $2.000, el total pasa a $8.000 y se puede seguir hasta el pago con ese total.\n**Severidad:** Alta – se aplica un descuento vencido que cambia el monto a cobrar y afecta la integridad de los precios.\n**Frecuencia:** Siempre\n**Evidencia:** [Completar: adjuntar captura del carrito con el cupón VERANO20 aplicado y el total de $8.000]\n**Notas:** Reproducido en 5 de 5 intentos en web (Chrome 131, Windows 11) y 5 de 5 intentos en Android (Mercadito 2.4.0, Android 13). El cupón vigente BIENVENIDA10 descuenta correctamente y el cupón inexistente HOLA123 muestra su error, por lo que el problema parece limitado a la validación de fecha de vencimiento de los cupones.\n**Casos de regresión:**\nEscenario: Cupón vencido no se aplica al carrito\n  Dado un carrito con productos por $10.000\n  Cuando el usuario aplica el cupón VERANO20, que venció el 31 de octubre\n  Entonces aparece un mensaje indicando que el cupón está vencido\n  Y el descuento no se aplica\n  Y el total del carrito sigue en $10.000\n\nEscenario: Cupón vigente sigue aplicándose correctamente\n  Dado un carrito con productos por $10.000\n  Cuando el usuario aplica el cupón BIENVENIDA10\n  Entonces el descuento se aplica y el total se actualiza según el cupón\n",
+        "problemas": [],
+        "revisor_ok": true,
+        "historial": [
+          {
+            "intento": 1,
+            "problemas": [
+              {
+                "regla": "B04",
+                "gravedad": "alta",
+                "detalle": "Frecuencia no permitida: \"Siempre (5 de 5 intentos en web y 5 de 5 en Android)\""
+              },
+              {
+                "regla": "B12",
+                "gravedad": "alta",
+                "detalle": "Paso 2: \"Ingresar el cupón VERANO20 y aplicarlo\" combina dos acciones (escribir el cupón y aplicarlo) en un mismo paso."
+              }
+            ]
+          },
+          {
+            "intento": 2,
+            "problemas": [
+              {
+                "regla": "B12",
+                "gravedad": "alta",
+                "detalle": "Paso 5: \"Continuar hasta el pago y verificar el total\" combina dos acciones (navegar hasta el pago y revisar el total). Conviene separarlo en dos pasos."
+              }
+            ]
+          },
+          {
+            "intento": 3,
+            "problemas": []
+          }
+        ]
+      },
+      "descripcion": "En el carrito de Mercadito, con productos por $10.000, apliqué el cupón VERANO20 (20 % de descuento), que venció el 31 de octubre. No aparece ningún mensaje: el carrito aplica un descuento de $2.000, el total pasa a $8.000 y se puede seguir hasta el pago con ese total. Debería aparecer el mensaje de cupón vencido y el total seguir en $10.000. Pasa siempre: 5 de 5 intentos en web (Chrome 131 en Windows 11) y 5 de 5 en Android (Mercadito 2.4.0 en Android 13). El cupón vigente BIENVENIDA10 descuenta bien y el cupón inexistente HOLA123 muestra su error.",
       "log": ""
     }
   ]

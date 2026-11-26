@@ -4,7 +4,7 @@ import json
 import pytest
 
 from demo import SinEjemploGrabado, buscar, cargar_ejemplos, ejemplos_de
-from evaluar import ejemplos_para_demo
+from evaluar import combinar_ejemplos, ejemplos_para_demo, guardar_ejemplos_demo
 
 EJEMPLOS = [
     {"id": "G01", "tipo": "gherkin", "nombre": "Cupón", "entrada": "Como cliente quiero un cupón",
@@ -56,3 +56,25 @@ def test_la_demo_guarda_solo_ejecuciones_aprobadas_y_una_por_caso():
     assert [e["id"] for e in ejemplos] == ["G01"]
     assert ejemplos[0]["resultado"]["contenido"] == "x"
     assert ejemplos[0]["historia"] == "historia"
+
+
+def test_guardar_en_la_demo_suma_los_casos_nuevos_sin_borrar_los_demas():
+    existentes = {"modelo": "viejo", "ejemplos": [{"id": "G01", "v": 1}, {"id": "R01", "v": 1}]}
+    nuevos = {"modelo": "nuevo", "fecha": "2026-11-26", "ejemplos": [{"id": "G06", "v": 2}]}
+    combinados = combinar_ejemplos(existentes, nuevos)
+    assert [e["id"] for e in combinados["ejemplos"]] == ["G01", "R01", "G06"]
+    assert combinados["modelo"] == "nuevo"
+
+
+def test_guardar_en_la_demo_reemplaza_un_caso_repetido_en_su_lugar():
+    existentes = {"ejemplos": [{"id": "G01", "v": 1}, {"id": "R01", "v": 1}]}
+    nuevos = {"modelo": "m", "ejemplos": [{"id": "G01", "v": 2}]}
+    combinados = combinar_ejemplos(existentes, nuevos)["ejemplos"]
+    assert [(e["id"], e["v"]) for e in combinados] == [("G01", 2), ("R01", 1)]
+
+
+def test_guardar_en_la_demo_crea_el_archivo_si_no_existe(tmp_path):
+    ruta = tmp_path / "demo" / "ejemplos.json"
+    guardar_ejemplos_demo({"modelo": "m", "ejemplos": [{"id": "G06"}]}, ruta)
+    guardar_ejemplos_demo({"modelo": "m", "ejemplos": [{"id": "R06"}]}, ruta)
+    assert [e["id"] for e in json.loads(ruta.read_text(encoding="utf-8"))["ejemplos"]] == ["G06", "R06"]

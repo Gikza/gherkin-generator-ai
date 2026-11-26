@@ -41,6 +41,14 @@
       "no_debe_contener": ["administrador"]
     },
     {
+      "id": "G06",
+      "tipo": "gherkin",
+      "nombre": "Mercadito: cupón en el carrito (la historia de la guía)",
+      "entrada": "Como cliente, quiero aplicar un cupón de descuento en el carrito para pagar menos en mi compra.\n\nCriterios de aceptación:\n1. Si el cupón es válido, el total del carrito muestra el descuento.\n2. Si el cupón está vencido, aparece un mensaje de error.\n3. Se puede usar un solo cupón por compra.\n\nRespuestas del refinamiento:\n- El cupón pide una compra mínima de $5.000.\n- No se suma a los productos que ya están en oferta.\n- El descuento se recalcula si se quitan productos del carrito.\n- El código se acepta en mayúsculas o minúsculas.\n- Un cupón que no existe tiene su propio mensaje de error.",
+      "esperado": "feature",
+      "debe_contener": ["5.000"]
+    },
+    {
       "id": "R01",
       "tipo": "reporte",
       "nombre": "Cupón con log 500",
@@ -79,6 +87,15 @@
       "descripcion": "Al guardar el perfil con una foto mayor a 5 MB, la página queda en blanco. Debería mostrar un mensaje de que la foto es muy grande. Adjunto captura de la pantalla en blanco.",
       "esperado": "reporte",
       "debe_contener": ["captura"]
+    },
+    {
+      "id": "R06",
+      "tipo": "reporte",
+      "nombre": "Mercadito: el cupón vencido aplica el descuento (MER-142)",
+      "descripcion": "En el carrito de Mercadito, con productos por $10.000, apliqué el cupón VERANO20 (20 % de descuento), que venció el 31 de octubre. No aparece ningún mensaje: el carrito aplica un descuento de $2.000, el total pasa a $8.000 y se puede seguir hasta el pago con ese total. Debería aparecer el mensaje de cupón vencido y el total seguir en $10.000. Pasa siempre: 5 de 5 intentos en web (Chrome 131 en Windows 11) y 5 de 5 en Android (Mercadito 2.4.0 en Android 13). El cupón vigente BIENVENIDA10 descuenta bien y el cupón inexistente HOLA123 muestra su error.",
+      "log": "",
+      "esperado": "reporte",
+      "debe_contener": ["VERANO20"]
     }
   ]
 }
